@@ -3,13 +3,47 @@
   <head>
     <title>Send</title>
     <link rel="stylesheet" href="/stylesheets/style.css" />
+
+  <%- include('partials/tailwind') %>
+
   </head>
-  <body>
-    <h1>RSA docs</h1>
-    <p>Send a file</p>
-    <form action="/send" method="post" enctype="multipart/form-data">
+  <body class="space-y-4 container mx-auto">
+    <h1 class="text-3xl font-bold">Project OCR</h1>
+    <p>Encrypt file</p>
+    <form action="/send" method="post" enctype="multipart/form-data" class="space-y-4">
       <input type="file" name="file" id="file" />
-      <input type="submit" value="Send" />
+      <input type="submit" value="ENCRYPT"  class="block py-2 px-2 bg-blue-200 text-blue-600 w-48 rounded shadow font-bold tracking-tight"/>
     </form>
+
+
+    <div class="flex  w-full space-x-4">
+    <% if(textContent) { %> 
+
+    <div class=" flex-col flex-1 ">
+    <h2 class=" my-4">Encrypted content</h2>
+
+      <textarea name="" id=""  class=" block bg-gray-200 p-2 rounded shadow w-full text-gray-900 font-mono " rows="15">
+        <%= textContent %>
+      </textarea>
+    </div>
+
+    <% } %>
+
+
+<% if (publicPem) { %>
+
+    <div class="flex-1">
+
+    <h2 class=" my-4">Decryption key</h2>
+    <code class=" block bg-red-200 p-2 rounded shadow w-full text-red-900"><%= publicPem %></code>
+
+    </div>
+<% } %>
+      
+
+
+  </div>
+
+    
   </body>
 </html>

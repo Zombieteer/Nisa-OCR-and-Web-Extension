@@ -3,15 +3,18 @@
   <head>
     <title>Index</title>
     <link rel="stylesheet" href="/stylesheets/style.css" />
+  <%- include('partials/tailwind') %>
   </head>
-  <body>
-    <h1>Project OCR</h1>
-    <p>Choose an option</p>
+  <body class="space-y-4 mx-auto container">
+
+    <h1 class="text-3xl font-bold">Project OCR</h1>
+    <p>Encrypt and verify PDF documents</p>
     <div>
-      <a href="/send">Send</a>
+      <a href="/send" class="block py-2 px-2 bg-blue-200 text-blue-700 w-48 rounded shadow">Encrypt Document</a>
     </div>
     <div>
-      <a href="/receive">Receive</a>
+
+      <a href="/receive" class="block py-2 px-2 bg-blue-200 text-blue-700 w-48 rounded shadow">Verify Document</a>
     </div>
   </body>
 </html>
