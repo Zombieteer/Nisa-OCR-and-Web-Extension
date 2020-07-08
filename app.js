@@ -3,55 +3,50 @@ const config = require('./client_secret.json')
 const createError = require('http-errors')
 const express = require('express')
 const path = require('path')
+const fs = require('fs')
 const cookieParser = require('cookie-parser')
 const logger = require('morgan')
 const fileUpload = require('express-fileupload')
+const cors = require('cors')
 const { google } = require('googleapis')
 const { Storage } = require('@google-cloud/storage')
 const vision = require('@google-cloud/vision').v1
+const { Firestore } = require('@google-cloud/firestore')
+const firebase = require('firebase-admin')
+const encyptor = require('encryptor-node')
 const nodeRsa = require('node-rsa')
 
 const CLIENT_ID = config.web.client_id
 const CLIENT_SECRET = config.web.client_secret
 const REDIRECT_URL = config.web.redirect_uris
 
+const GOOGLE_SERVICE_KEY = 'project-ocr.json'
+
 // Service key is required below
-const visionClient = new vision.ImageAnnotatorClient({ keyFilename: 'project-ocr.json', projectId: 'project-ocr' })
+const visionClient = new vision.ImageAnnotatorClient({ keyFilename: GOOGLE_SERVICE_KEY, projectId: 'project-ocr' })
 // const authClient = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URL)
 const storage = new Storage({ keyFile: 'project-ocr.json', projectId: 'project-ocr-282210' })
+const firestore = new Firestore({ projectId: 'project-ocr-282210' })
 
 const app = express()
-
-app.set('views', path.join(__dirname, 'views'))
-app.set('view engine', 'ejs')
 
 app.use(logger('tiny'))
 app.use(express.json())
 app.use(express.urlencoded({ extended: false }))
-app.use(cookieParser())
 app.use(express.static(path.join(__dirname, 'public')))
+app.use(cors())
 app.use(fileUpload({ useTempFiles: true, tempFileDir: '/tmp/' }))
 
 // Routes
 
-// let authenticated = false
-
-app.get('/', (req, res) => {
-  // // if (!authenticated) {
-  // //   // Redirect for OAuth
-  // //   const url = authClient.generateAuthUrl({ access_type: 'offline', scope: 'https://www.googleapis.com/auth/drive' })
-  // //   res.redirect(url)
-  // // } else {
-  res.render('index')
-  // }
+app.get('/api', (req, res, next) => {
+  res.json({ hello: 'ok' }).end()
 })
 
-app.get('/send', function (req, res, next) {
-  res.render('send', { textContent: null, publicPem: null })
-})
-
-app.post('/send', async (req, res, next) => {
+app.post('/api/send', async (req, res, next) => {
   const file = req.files.file
+  const { email } = req.body
+
   const bucketName = 'project-ocr-bucket'
   const fileName = `${file.name.split('.')[0]}.pdf`
 
@@ -109,68 +104,137 @@ app.post('/send', async (req, res, next) => {
     return prefix
   }
 
-  const downloadFile = async (file) => {
-    const rsaKey = new nodeRsa({ b: 512 })
+  // const downloadFile = async (file) => {
+  //   const rsaKey = new nodeRsa({ b: 512 })
+  //   const fileBuffer = await file.download()
+  //   const fileJSON = JSON.parse(fileBuffer)
+
+  //   const textContent = rsaKey.encryptPrivate(
+  //     JSON.stringify(fileJSON.responses.map((response) => response.fullTextAnnotation.text)),
+  //     'base64'
+  //   )
+
+  //   //print public key
+  //   const publicPem = rsaKey.exportKey('pkcs8-public-pem')
+  //   // console.log(publicPem)
+  //   // type array of encrypted text
+  //   return [textContent, publicPem]
+  // }
+
+  const encryptFile = async (file, email) => {
+    const document = firestore.doc('project-ocr/keystore')
+
     const fileBuffer = await file.download()
     const fileJSON = JSON.parse(fileBuffer)
+    const textContent = fileJSON.responses.map((response) => response.fullTextAnnotation.text)
 
-    const textContent = rsaKey.encryptPrivate(
-      JSON.stringify(fileJSON.responses.map((response) => response.fullTextAnnotation.text)),
-      'base64'
-    )
-
-    //print public key
-    const publicPem = rsaKey.exportKey('pkcs8-public-pem')
-    // console.log(publicPem)
-    // type array of encrypted text
-    return [textContent, publicPem]
+    try {
+      const doc = await document.get()
+      if (!doc.exists) {
+        res.json({ status: 404 })
+      } else {
+        const data = doc.data()
+        const { secret } = data.users.find((user) => user.email === email)
+        // console.log(secret)
+        const result = encyptor.encrypt(secret, textContent)
+        // console.log(result)
+        fs.writeFile('encrypted.txt', result, (err) => {
+          if (err) console.log(err)
+          else {
+            res.download('encrypted.txt')
+          }
+        })
+      }
+    } catch (e) {
+      console.log(e)
+      res.json({ error: e })
+    }
   }
 
   try {
     uploadFile()
       .then(() => performOCR())
       .then((prefix) => getFileByPrefix(prefix))
-      .then((file) => downloadFile(file))
-      .then((result) => res.render('send', { textContent: result[0], publicPem: result[1] }))
-
-    // res.redirect('/send')
+      // .then((file) => downloadFile(file))
+      .then((file) => encryptFile(file, email))
+    // .then((result) => res.json({ ...result, status: 'ok' }))
   } catch (e) {
     console.log(e)
-    res.redirect('/send')
+    res.redirect('/')
   }
 })
 
 app.get('/receive', function (req, res, next) {
-  res.render('receive', { decryptedContent: null })
+  res.json({ status: 'ok' })
 })
 
-app.post('/receive', (req, res, next) => {
-  const { content, key } = req.body
-  const publicKey = new nodeRsa(key)
+app.post('/api/receive', async (req, res, next) => {
+  console.log(req.body)
+  const { email } = req.body
+  const file = req.files.file
+  console.log(file)
+  // TODO: use firebase to get secret
+  const secret = Buffer.from(email).toString('base64')
+  fs.readFile(file.tempFilePath, 'utf8', (err, data) => {
+    if (err) throw err
+    else {
+      try {
+        const results = encyptor.decrypt(secret, data)
+        console.log(results)
+        res.json({ results, status: 'ok' })
+      } catch (e) {
+        res.json({ error: 'Decryption failed, Document is tampered or wrong sender selected' })
+      }
+    }
+  })
+})
+
+app.get('/api/users', async (req, res, next) => {
+  const document = firestore.doc('project-ocr/keystore')
   try {
-    const decryptedContent = publicKey.decryptPublic(content, 'utf8')
-    res.render('content', { decryptedContent: JSON.parse(decryptedContent) })
+    const doc = await document.get()
+    if (!doc.exists) {
+      res.json({ status: 'ok', users: [] })
+    } else {
+      const data = doc.data()
+      const users = data.users.map((user) => ({ email: user.email }))
+      res.json({ users, status: 'ok' })
+    }
   } catch (e) {
-    res.render('error', { message: 'Error during decryption', error: { status: 400, stack: e } })
+    console.log(e)
+    res.json({ error: e })
   }
 })
 
-// app.get('/auth/google/callback', (req, res, next) => {
-//   const code = req.query.code
-//   if (code) {
-//     authClient.getToken(code, function (err, tokens) {
-//       if (err) {
-//         console.log('Error authenticating')
-//         console.log(err)
-//       } else {
-//         console.log('Successfully authenticated')
-//         authClient.setCredentials(tokens)
-//         authenticated = true
-//         res.redirect('/')
-//       }
-//     })
-//   }
-// })
+app.post('/api/register', async (req, res, next) => {
+  console.log('req body')
+  console.log(req.body)
+  const { email } = req.body
+  const secret = Buffer.from(email).toString('base64')
+  const document = firestore.doc('project-ocr/keystore')
+
+  try {
+    const doc = await document.get()
+    if (!doc.exists) {
+      await document.set({ users: [{ email, secret }] })
+      res.json({ status: 'ok' })
+    } else {
+      const data = doc.data()
+      const registeredUser = data.users.find((user) => user.email === email)
+      if (!registeredUser) {
+        let newUsers = data.users.concat({ email, secret })
+        data.users = newUsers
+        await document.set(data)
+        res.json({ status: 'ok' })
+      } else {
+        res.status(200).end()
+      }
+    }
+  } catch (e) {
+    console.log(e)
+    res.json({ error: e })
+  }
+})
 
 app.use((req, res, next) => {
   next(createError(404))
@@ -181,7 +245,7 @@ app.use((err, req, res, next) => {
   res.locals.error = req.app.get('env') === 'development' ? err : {}
 
   res.status(err.status || 500)
-  res.render('error')
+  res.json({ status: 404 })
 })
 
 module.exports = app
