@@ -184,7 +184,7 @@ const Encrypt = () => {
     data.append('file', file)
     data.append('email', localStorage.getItem('email'))
     axios
-      .post('http://localhost:3001/api/send', data, {
+      .post('/api/send', data, {
         // receive two parameter endpoint url ,form data
         responseType: 'blob',
       })
@@ -292,7 +292,7 @@ const Verify = () => {
     data.append('file', file)
     data.append('email', sender)
     console.log(file, sender)
-    axios.post('http://localhost:3001/api/receive', data, {}).then((res) => {
+    axios.post('/api/receive', data, {}).then((res) => {
       if (res.data.status === 'ok') {
         setSecretContent(res.data.results)
         console.log(res.data)
@@ -305,7 +305,7 @@ const Verify = () => {
   }
 
   useEffect(() => {
-    axios.get('http://localhost:3001/api/users').then((res) => setUsers(res.data.users))
+    axios.get('/api/users').then((res) => setUsers(res.data.users))
   }, [])
 
   useEffect(() => {
@@ -474,7 +474,7 @@ const Login = () => {
         const email = user.email
         console.log('user email is')
         console.log(user.email)
-        axios.post('http://localhost:3001/api/register', { email })
+        axios.post('/api/register', { email })
         localStorage.setItem('email', email)
         console.log(user)
       })
@@ -565,7 +565,7 @@ const Register = () => {
             .then((res) => {
               if (res) {
                 Auth.setIsLoggedIn(true)
-                axios.post('http://localhost:3001/api/register', { email })
+                axios.post('/api/register', { email })
                 localStorage.setItem('email', email)
                 history.push('/')
               }
@@ -594,7 +594,7 @@ const Register = () => {
         const token = result.credential.accessToken
         // The signed-in user info.
         const user = result.user
-        axios.post('http://localhost:3001/api/register', { email: user.email })
+        axios.post('/api/register', { email: user.email })
         localStorage.setItem('email', user.email)
         console.log(user)
       })
