@@ -235,6 +235,9 @@ app.post('/api/register', async (req, res, next) => {
     res.json({ error: e })
   }
 })
+app.get('*', (req, res, next) => {
+  res.sendFile(path.join(__dirname + '/build/index.html'))
+})
 
 app.use((req, res, next) => {
   next(createError(404))
