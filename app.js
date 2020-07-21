@@ -16,6 +16,8 @@ const firebase = require('firebase-admin')
 const encyptor = require('encryptor-node')
 const nodeRsa = require('node-rsa')
 
+const { PDFDocument } = require('pdf-lib')
+
 const CLIENT_ID = config.web.client_id
 const CLIENT_SECRET = config.web.client_secret
 const REDIRECT_URL = config.web.redirect_uris
@@ -44,14 +46,14 @@ app.get('/api', (req, res, next) => {
 })
 
 app.post('/api/send', async (req, res, next) => {
-  const file = req.files.file
+  const sentFile = req.files.file
   const { email } = req.body
 
   const bucketName = 'project-ocr-bucket'
-  const fileName = `${file.name.split('.')[0]}.pdf`
+  const fileName = `${sentFile.name.split('.')[0]}.pdf`
 
   const uploadFile = async () => {
-    await storage.bucket(bucketName).upload(file.tempFilePath, {
+    await storage.bucket(bucketName).upload(sentFile.tempFilePath, {
       destination: fileName,
     })
     console.log('UPLOAD STATUS')
@@ -121,10 +123,10 @@ app.post('/api/send', async (req, res, next) => {
   //   return [textContent, publicPem]
   // }
 
-  const encryptFile = async (file, email) => {
+  const encryptFile = async (ocrFile, email) => {
     const document = firestore.doc('project-ocr/keystore')
 
-    const fileBuffer = await file.download()
+    const fileBuffer = await ocrFile.download()
     const fileJSON = JSON.parse(fileBuffer)
     const textContent = fileJSON.responses.map((response) => response.fullTextAnnotation.text)
 
@@ -135,15 +137,25 @@ app.post('/api/send', async (req, res, next) => {
       } else {
         const data = doc.data()
         const { secret } = data.users.find((user) => user.email === email)
-        // console.log(secret)
+        console.log(secret)
         const result = encyptor.encrypt(secret, textContent)
-        // console.log(result)
-        fs.writeFile('encrypted.txt', result, (err) => {
+        fs.readFile(sentFile.tempFilePath, async (err, data) => {
           if (err) console.log(err)
           else {
-            res.download('encrypted.txt')
+            const pdf = await PDFDocument.load(data)
+            pdf.setAuthor('faraz')
+            const pdfBytes = await pdf.save()
+            console.log(pdfBytes)
+            res.send(pdfBytes)
           }
         })
+        // console.log(result)
+        // fs.writeFile('encrypted.txt', result, (err) => {
+        //   if (err) console.log(err)
+        //   else {
+        //     res.download('encrypted.txt')
+        //   }
+        // })
       }
     } catch (e) {
       console.log(e)
@@ -156,7 +168,7 @@ app.post('/api/send', async (req, res, next) => {
       .then(() => performOCR())
       .then((prefix) => getFileByPrefix(prefix))
       // .then((file) => downloadFile(file))
-      .then((file) => encryptFile(file, email))
+      .then((ocrFile) => encryptFile(ocrFile, email))
     // .then((result) => res.json({ ...result, status: 'ok' }))
   } catch (e) {
     console.log(e)
