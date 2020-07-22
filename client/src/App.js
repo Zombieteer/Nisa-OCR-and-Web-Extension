@@ -22,6 +22,9 @@ export const AuthContext = React.createContext(null)
 
 localStorage.clear('email')
 
+const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || ``
+
+
 function App() {
   const [isOpen, setIsOpen] = useState(false)
   // is true on every load so commented for now
@@ -59,7 +62,7 @@ function App() {
                   <ul
                     class={`flex ml-auto flex-1 flex-col md:flex-row  md:mt-0 mt-2 md:mb-0 mb-2 md:ml-auto list-disc md:list-none md:flex ${
                       isOpen ? 'block' : 'hidden'
-                    }`}
+                      }`}
                   >
                     <li class="md:mx-3 md:py-6 pb-2">
                       <NavLink class="hover:text-gray-700 focus:text-gray-700 text-gray-900" to="/">
@@ -83,25 +86,25 @@ function App() {
                           Log In
                         </NavLink>
                       ) : (
-                        <button
-                          class="font-semibold hover:text-gray-700 focus:text-gray-700 text-gray-900"
-                          onClick={() => {
-                            firebase
-                              .auth()
-                              .signOut()
-                              .then(function () {
-                                setIsLoggedIn(false)
-                                // wipe from persistent storage
-                                // Sign-out successful.
-                              })
-                              .catch(function (error) {
-                                // An error happened.
-                              })
-                          }}
-                        >
-                          Log Out
-                        </button>
-                      )}
+                          <button
+                            class="font-semibold hover:text-gray-700 focus:text-gray-700 text-gray-900"
+                            onClick={() => {
+                              firebase
+                                .auth()
+                                .signOut()
+                                .then(function () {
+                                  setIsLoggedIn(false)
+                                  // wipe from persistent storage
+                                  // Sign-out successful.
+                                })
+                                .catch(function (error) {
+                                  // An error happened.
+                                })
+                            }}
+                          >
+                            Log Out
+                          </button>
+                        )}
                     </li>
                   </ul>
                   <button
@@ -184,17 +187,21 @@ const Encrypt = () => {
     data.append('file', file)
     data.append('email', localStorage.getItem('email'))
     axios
-      .post('/api/send', data, {
+      .post(`${API_ENDPOINT}/api/send`, data, {
         // receive two parameter endpoint url ,form data
         responseType: 'blob',
       })
       .then((res) => {
         setLoading(false)
-        const url = window.URL.createObjectURL(res.data)
+        console.log(res)
+        const file = new Blob(
+          [res.data]
+        );
+        const url = window.URL.createObjectURL(file)
         const link = document.createElement('a')
         link.href = url
         console.log(res.headers)
-        link.setAttribute('download', 'encrypted.txt')
+        link.setAttribute('download', 'encrypted.pdf')
         document.body.appendChild(link)
         link.click()
       })
@@ -292,7 +299,7 @@ const Verify = () => {
     data.append('file', file)
     data.append('email', sender)
     console.log(file, sender)
-    axios.post('/api/receive', data, {}).then((res) => {
+    axios.post(`${API_ENDPOINT}/api/receive`, data, {}).then((res) => {
       if (res.data.status === 'ok') {
         setSecretContent(res.data.results)
         console.log(res.data)
@@ -305,7 +312,7 @@ const Verify = () => {
   }
 
   useEffect(() => {
-    axios.get('/api/users').then((res) => setUsers(res.data.users))
+    axios.get(`${API_ENDPOINT}/api/users`).then((res) => setUsers(res.data.users))
   }, [])
 
   useEffect(() => {
@@ -339,7 +346,7 @@ const Verify = () => {
               <div
                 className={`absolute top-0 right-0 flex items-center justify-between h-full mx-2 text-gray-500   cursor-pointer ${
                   suggestions ? 'block' : 'hidden'
-                }`}
+                  }`}
                 onClick={(e) => setSuggestions(null)}
               >
                 <svg
@@ -474,7 +481,7 @@ const Login = () => {
         const email = user.email
         console.log('user email is')
         console.log(user.email)
-        axios.post('/api/register', { email })
+        axios.post(`${API_ENDPOINT}/api/register`, { email })
         localStorage.setItem('email', email)
         console.log(user)
       })
@@ -565,7 +572,7 @@ const Register = () => {
             .then((res) => {
               if (res) {
                 Auth.setIsLoggedIn(true)
-                axios.post('/api/register', { email })
+                axios.post(`${API_ENDPOINT}/api/register`, { email })
                 localStorage.setItem('email', email)
                 history.push('/')
               }
@@ -594,7 +601,7 @@ const Register = () => {
         const token = result.credential.accessToken
         // The signed-in user info.
         const user = result.user
-        axios.post('/api/register', { email: user.email })
+        axios.post(`${API_ENDPOINT}/api/register`, { email: user.email })
         localStorage.setItem('email', user.email)
         console.log(user)
       })

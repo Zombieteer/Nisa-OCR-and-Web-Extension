@@ -17,6 +17,7 @@ const encyptor = require('encryptor-node')
 const nodeRsa = require('node-rsa')
 
 const { PDFDocument } = require('pdf-lib')
+const stream = require('stream')
 
 const CLIENT_ID = config.web.client_id
 const CLIENT_SECRET = config.web.client_secret
@@ -143,10 +144,14 @@ app.post('/api/send', async (req, res, next) => {
           if (err) console.log(err)
           else {
             const pdf = await PDFDocument.load(data)
-            pdf.setAuthor('faraz')
+            pdf.setAuthor(result)
             const pdfBytes = await pdf.save()
-            console.log(pdfBytes)
-            res.send(pdfBytes)
+            fs.writeFile('done.pdf', pdfBytes, (err, data) => {
+              if(err) console.log(err)
+              else {
+                return res.download('done.pdf')
+              }
+            })
           }
         })
         // console.log(result)
