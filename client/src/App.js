@@ -284,6 +284,7 @@ const Verify = () => {
   const [suggestions, setSuggestions] = useState(null)
   const [sender, setSender] = useState('')
   const [error, setError] = useState(null)
+  const [verify, setVerify] = useState(null)
 
   const _onChangeHandler = (event) => {
     setFile(event.target.files[0])
@@ -292,6 +293,7 @@ const Verify = () => {
   const _onClickHandler = async (event) => {
     event.preventDefault()
     setLoading(true)
+    setVerify(false)
     setSecretContent(null)
     setError(null)
 
@@ -301,7 +303,7 @@ const Verify = () => {
     console.log(file, sender)
     axios.post(`${API_ENDPOINT}/api/receive`, data, {}).then((res) => {
       if (res.data.status === 'ok') {
-        setSecretContent(res.data.results)
+        setVerify(true)
         console.log(res.data)
       } else {
         setError(res.data.error)
@@ -334,7 +336,7 @@ const Verify = () => {
               <input name="file" type="file" className="hidden" onChange={_onChangeHandler} />
             </label>
 
-            <label className="text-gray-700">Sender's email</label>
+            {/* <label className="text-gray-700">Sender's email</label>
             <div className="relative w-full">
               <input
                 type="text"
@@ -371,7 +373,7 @@ const Verify = () => {
                     ))}
                 </div>
               )}
-            </div>
+            </div> */}
 
             <button
               type="submit"
@@ -398,9 +400,8 @@ const Verify = () => {
             </div>
           </div>
         )}
-        {secretContent && (
+        {verify && (
           <div className="w-full ">
-            {' '}
             <div className="flex items-center px-4 py-4 font-bold text-green-600 bg-green-200 rounded">
               <span> The document is verified and not tampered! </span>
               <svg fill="currentColor" viewBox="0 0 20 20" className="w-6 h-6 ml-4">
@@ -411,7 +412,6 @@ const Verify = () => {
                 ></path>
               </svg>
             </div>
-            <div className="p-4 mt-4 overflow-y-scroll border rounded shadow h-72">{secretContent}</div>
           </div>
         )}
       </div>
