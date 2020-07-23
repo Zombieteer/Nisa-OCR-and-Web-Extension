@@ -1,0 +1,4 @@
+PEM_FILE_LOCATION=~/Downloads/aws-nisa-ocr.pem
+INSTANCE_NAME=ubuntu@ec2-13-127-218-137.ap-south-1.compute.amazonaws.com
+DOCKER_USER_NAME=g1aurav
+DOCKER_PASSWORD=67242d73-5483-4514-8b60-c5964c053630

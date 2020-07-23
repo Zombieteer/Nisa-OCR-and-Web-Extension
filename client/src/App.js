@@ -28,8 +28,8 @@ const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || ``
 function App() {
   const [isOpen, setIsOpen] = useState(false)
   // is true on every load so commented for now
-  // const [isLoggedIn, setIsLoggedIn] = useState(firebase.auth.Auth.Persistence.SESSION)
-  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [isLoggedIn, setIsLoggedIn] = useState(firebase.auth.Auth.Persistence.SESSION)
+  // const [isLoggedIn, setIsLoggedIn] = useState(false)
   console.log(firebase.auth().currentUser)
 
   return (
@@ -55,7 +55,7 @@ function App() {
                         />
                       </svg>
                       <span class="md:my-4 md:mr-4 px-2 rounded text-2xl" href="#">
-                        Project OCR
+                        NISA Project OCR
                       </span>
                     </Link>
                   </div>
@@ -222,13 +222,14 @@ const Encrypt = () => {
                 <path d="M16.88 9.1A4 4 0 0 1 16 17H5a5 5 0 0 1-1-9.9V7a3 3 0 0 1 4.52-2.59A4.98 4.98 0 0 1 17 8c0 .38-.04.74-.12 1.1zM11 11h3l-4-4-4 4h3v3h2v-3z" />
               </svg>
               <span class="mt-2 text-base leading-normal">{file ? file.name : 'Select a file'}</span>
-              <input name="file" type="file" className="hidden" onChange={_onChangeHandler} />
+              <input name="file" type="file" accept=".pdf" className="hidden" onChange={_onChangeHandler} />
             </label>
 
             <button
               type="submit"
               onClick={_onClickHandler}
               class="flex items-center justify-center px-4 py-2 text-white bg-gray-800 rounded shadow "
+              disabled={loading}
             >
               Encrypt file
             </button>
@@ -445,7 +446,9 @@ const Login = () => {
     provider.addScope('profile')
     provider.addScope('email')
     if (email.trim() && password.trim()) {
-      firebase
+      firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
+      .then(function() {
+        return firebase
         .auth()
         .signInWithPopup(provider)
         .then(function (result) {
@@ -460,6 +463,10 @@ const Login = () => {
               }
             })
         })
+      })
+      .catch(function(error) {
+        console.log(error);
+      });
     } else alert('Validation Error')
   }
 
@@ -468,7 +475,9 @@ const Login = () => {
     const provider = new firebase.auth.GoogleAuthProvider()
     provider.addScope('profile')
     provider.addScope('email')
-    firebase
+    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
+    .then(function() {
+      return firebase
       .auth()
       .signInWithPopup(provider)
       .then(function (result) {
@@ -485,7 +494,10 @@ const Login = () => {
         localStorage.setItem('email', email)
         console.log(user)
       })
-      .catch((e) => console.log(e))
+    })
+    .catch(function(error) {
+      console.log(error);
+    });
   }
 
   return (

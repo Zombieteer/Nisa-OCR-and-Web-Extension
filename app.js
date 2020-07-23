@@ -50,6 +50,14 @@ app.get('/api', (req, res, next) => {
 })
 
 app.post('/api/send', async (req, res, next) => {
+  if(!req.files || !req.files.file) {
+    return res.json({error: 'No file found'})
+  }
+
+  if (!req.body.email) {
+    return res.json({error: 'Email not found'});
+  }
+
   const sentFile = req.files.file
   const { email } = req.body
 
@@ -117,7 +125,7 @@ app.post('/api/send', async (req, res, next) => {
 
     const fileBuffer = await ocrFile.download()
     const fileJSON = JSON.parse(fileBuffer)
-    const textContent = fileJSON.responses.map((response) => response.fullTextAnnotation.text)
+    const textContent = fileJSON.responses.map((response) => response.fullTextAnnotation && response.fullTextAnnotation.text)
 
     try {
       const doc = await document.get()
@@ -168,14 +176,18 @@ app.get('/receive', function (req, res, next) {
 })
 
 app.post('/api/receive', async (req, res, next) => {
-  console.log(req.body)
-  // const { email } = req.body
+  if(!req.files || !req.files.file) {
+    return res.json({error: 'No file found'})
+  }
   const sentFile = req.files.file
   console.log(sentFile.data)
   fs.readFile(sentFile.tempFilePath, {}, async (err, data) => {
     if (err) console.log(err)
     const pdf = await PDFDocument.load(data)
     const hash = pdf.getAuthor()
+    if(!hash) {
+      return res.json({ error: 'Decryption failed, Document is tampered' })
+    }
     console.log(hash)
     console.log(1)
 
@@ -247,7 +259,7 @@ app.post('/api/receive', async (req, res, next) => {
 
       const fileBuffer = await ocrFile.download()
       const fileJSON = JSON.parse(fileBuffer)
-      const textContent = fileJSON.responses.map((response) => response.fullTextAnnotation.text)
+      const textContent = fileJSON.responses.map((response) => response.fullTextAnnotation && response.fullTextAnnotation.text)
 
       console.log(5.1)
 
