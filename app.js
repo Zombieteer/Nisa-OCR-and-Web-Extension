@@ -50,12 +50,12 @@ app.get('/api', (req, res, next) => {
 })
 
 app.post('/api/send', async (req, res, next) => {
-  if(!req.files || !req.files.file) {
-    return res.json({error: 'No file found'})
+  if (!req.files || !req.files.file) {
+    return res.json({ error: 'No file found' })
   }
 
   if (!req.body.email) {
-    return res.json({error: 'Email not found'});
+    return res.json({ error: 'Email not found' });
   }
 
   const sentFile = req.files.file
@@ -132,20 +132,25 @@ app.post('/api/send', async (req, res, next) => {
       if (!doc.exists) {
         res.json({ status: 404 })
       } else {
-        // const data = doc.data()
-        // const { secret } = data.users.find((user) => user.email === email)
-        // console.log(secret)
-        // const result = encyptor.encrypt(ENCRYPTION_SECRET, textContent)
-        const result = crypto.createHash('md5').update(ENCRYPTION_SECRET+textContent).digest('hex')
+        const data = doc.data()
+        console.log(1)
+        const { secret } = data.users.find((user) => user.email === email)
+        console.log(JSON.stringify(secret, null, 2))
+        const result = encyptor.encrypt(secret, textContent).slice(0, 10)
+        console.log('Result is')
+        console.log(result)
+        // const result = crypto.createHash('md5').update(ENCRYPTION_SECRET + textContent).digest('hex')
         fs.readFile(sentFile.tempFilePath, async (err, data) => {
           if (err) console.log(err)
           else {
             const pdf = await PDFDocument.load(data)
             pdf.setAuthor(result)
+            console.log(2)
             const pdfBytes = await pdf.save()
             fs.writeFile('done.pdf', pdfBytes, (err, data) => {
               if (err) console.log(err)
               else {
+                console.log(3)
                 return res.download('done.pdf')
               }
             })
@@ -176,16 +181,21 @@ app.get('/receive', function (req, res, next) {
 })
 
 app.post('/api/receive', async (req, res, next) => {
-  if(!req.files || !req.files.file) {
-    return res.json({error: 'No file found'})
+  if (!req.files || !req.files.file) {
+    return res.json({ error: 'No file found' })
+  }
+
+  if (!req.body.email) {
+    return res.json({ error: 'Please choose a sender' })
   }
   const sentFile = req.files.file
+  const { email } = req.body
   console.log(sentFile.data)
   fs.readFile(sentFile.tempFilePath, {}, async (err, data) => {
     if (err) console.log(err)
     const pdf = await PDFDocument.load(data)
     const hash = pdf.getAuthor()
-    if(!hash) {
+    if (!hash) {
       return res.json({ error: 'Decryption failed, Document is tampered' })
     }
     console.log(hash)
@@ -263,22 +273,38 @@ app.post('/api/receive', async (req, res, next) => {
 
       console.log(5.1)
 
-      // const result = encyptor.encrypt(ENCRYPTION_SECRET, textContent)
-      const result = crypto.createHash('md5').update(ENCRYPTION_SECRET+textContent).digest('hex')
+      // asf
 
-      console.log(5.2)
+      const document = firestore.doc('project-ocr/keystore')
+      try {
+        const doc = await document.get()
+        if (!doc.exists) {
+          res.json({ status: 404 })
+        } else {
+          const data = doc.data()
+          const { secret } = data.users.find((user) => user.email === email)
+          console.log(secret)
+          const result = encyptor.encrypt(secret, textContent).slice(0, 10)
 
-      let r = crypto.createHash('md5').update(result).digest('hex')
-      let h = crypto.createHash('md5').update(hash).digest('hex')
-      console.log('result is ', r)
-      console.log('hash is ', h)
-      if (r === h) {
-        console.log('success')
-        res.json({ status: 'ok' })
-      } else {
-        console.log('failed')
-        res.json({ error: 'Decryption failed, Document is tampered' })
+          console.log('Result is ')
+
+          console.log(5.2)
+
+          console.log('result is ', result)
+          console.log('hash is ', hash)
+          if (result === hash) {
+            console.log('success')
+            res.json({ status: 'ok' })
+          } else {
+            console.log('failed')
+            res.json({ error: 'Decryption failed, Document is tampered' })
+          }
+        }
+      } catch (e) {
+        console.log(e)
+        res.json({ status: 404 })
       }
+
     }
 
 
@@ -341,6 +367,7 @@ app.post('/api/register', async (req, res, next) => {
     res.json({ error: e })
   }
 })
+
 app.get('*', (req, res, next) => {
   res.sendFile(path.join(__dirname + '/build/index.html'))
 })

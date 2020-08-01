@@ -11,16 +11,6 @@ firebase.initializeApp(firebaseConfig)
 
 export const AuthContext = React.createContext(null)
 
-// firebase.auth().onAuthStateChanged((user) => {
-//   console.log(user)
-//   if (user) {
-//     localStorage.setItem('email', user.email)
-//   } else {
-//     localStorage.clear('email')
-//   }
-// })
-
-localStorage.clear('email')
 
 const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || ``
 
@@ -28,9 +18,31 @@ const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || ``
 function App() {
   const [isOpen, setIsOpen] = useState(false)
   // is true on every load so commented for now
-  const [isLoggedIn, setIsLoggedIn] = useState(firebase.auth.Auth.Persistence.SESSION)
-  // const [isLoggedIn, setIsLoggedIn] = useState(false)
+  // const [isLoggedIn, setIsLoggedIn] = useState(firebase.auth.Auth.Persistence.LOCAL)
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  console.log('Current user')
   console.log(firebase.auth().currentUser)
+
+  useEffect(() => {
+    firebase.auth().onAuthStateChanged(authUser => {
+      if (authUser) {
+        setIsLoggedIn(true)
+        localStorage.setItem('authUser', JSON.stringify(authUser))
+      }
+      else {
+        setIsLoggedIn(false)
+        localStorage.removeItem('authUser')
+      }
+
+    });
+    console.log(firebase.auth().currentUser);
+  }, [])
+
+  useEffect(() => {
+    console.log('is logged in ')
+    console.log(isLoggedIn)
+  }, [isLoggedIn])
+
 
   return (
     <div className="">
@@ -38,56 +50,56 @@ function App() {
         <Router>
           <header>
             <div className="shadow">
-              <div class="mb-2 container text-gray-800 w-full mx-auto py-2 ">
-                <div class="flex flex-col md:flex-row px-4 font-medium justify-between tracking-wide ">
-                  <div class="flex md:mt-0 mt-4 items-center">
-                    <Link to="/" exact className="flex items-center ">
+              <div className="container w-full py-2 mx-auto mb-2 text-gray-800 ">
+                <div className="flex flex-col justify-between px-4 font-medium tracking-wide md:flex-row ">
+                  <div className="flex items-center mt-4 md:mt-0">
+                    <Link to="/" className="flex items-center ">
                       <svg
                         viewBox="0 0 32 32"
                         stroke="currentColor"
-                        stroke-width="4"
-                        stroke-linecap="round"
-                        class="w-8 h-8"
+                        strokeWidth="4"
+                        strokeLinecap="round"
+                        className="w-8 h-8"
                       >
                         <path
                           d="M28 11v11M22 3v26M16 11v11M10 3v26M4 11v11"
                           transform="translate(16, 16) rotate(45) scale(.75, 1) translate(-16, -16)"
                         />
                       </svg>
-                      <span class="md:my-4 md:mr-4 px-2 rounded text-2xl" href="#">
+                      <span className="px-2 text-2xl rounded md:my-4 md:mr-4" href="#">
                         NISA Project OCR
                       </span>
                     </Link>
                   </div>
                   <ul
-                    class={`flex ml-auto flex-1 flex-col md:flex-row  md:mt-0 mt-2 md:mb-0 mb-2 md:ml-auto list-disc md:list-none md:flex ${
+                    className={`flex ml-auto flex-1 flex-col md:flex-row  md:mt-0 mt-2 md:mb-0 mb-2 md:ml-auto list-disc md:list-none md:flex ${
                       isOpen ? 'block' : 'hidden'
                       }`}
                   >
-                    <li class="md:mx-3 md:py-6 pb-2">
-                      <NavLink class="hover:text-gray-700 focus:text-gray-700 text-gray-900" to="/">
+                    <li className="pb-2 md:mx-3 md:py-6">
+                      <NavLink className="text-gray-900 hover:text-gray-700 focus:text-gray-700" to="/">
                         Home
                       </NavLink>
                     </li>
-                    <li class="md:mx-3 md:py-6 pb-2">
-                      <NavLink class="hover:text-gray-700 focus:text-gray-700 text-gray-900" to="/encrypt">
+                    <li className="pb-2 md:mx-3 md:py-6">
+                      <NavLink className="text-gray-900 hover:text-gray-700 focus:text-gray-700" to="/encrypt">
                         Encrypt
                       </NavLink>
                     </li>
-                    <li class="md:mx-3 md:py-6 pb-2">
-                      <NavLink class="hover:text-gray-700 focus:text-gray-700 text-gray-900" to="/verify">
+                    <li className="pb-2 md:mx-3 md:py-6">
+                      <NavLink className="text-gray-900 hover:text-gray-700 focus:text-gray-700" to="/verify">
                         Decrypt
                       </NavLink>
                     </li>
 
-                    <li class="md:mx-3 md:py-6 pb-2 md:ml-auto">
+                    <li className="pb-2 md:mx-3 md:py-6 md:ml-auto">
                       {!isLoggedIn ? (
-                        <NavLink class="hover:text-gray-700 focus:text-gray-700 text-gray-900" to="/login">
+                        <NavLink className="text-gray-900 hover:text-gray-700 focus:text-gray-700" to="/login">
                           Log In
                         </NavLink>
                       ) : (
                           <button
-                            class="font-semibold hover:text-gray-700 focus:text-gray-700 text-gray-900"
+                            className="font-semibold text-gray-900 hover:text-gray-700 focus:text-gray-700"
                             onClick={() => {
                               firebase
                                 .auth()
@@ -108,17 +120,17 @@ function App() {
                     </li>
                   </ul>
                   <button
-                    class="absolute top-0 right-0 m-5 px-1 md:hidden rounded hover:text-gray-700 focus:text-gray-700 text-gray-900"
+                    className="absolute top-0 right-0 px-1 m-5 text-gray-900 rounded md:hidden hover:text-gray-700 focus:text-gray-700"
                     onClick={() => setIsOpen(!isOpen)}
                   >
                     <svg
                       viewBox="0 0 24 24"
                       fill="none"
                       stroke="currentColor"
-                      stroke-width="2"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                      class="w-6 h-6"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      className="w-6 h-6"
                     >
                       <line x1="3" y1="12" x2="21" y2="12" />
                       <line x1="3" y1="6" x2="21" y2="6" />
@@ -185,7 +197,8 @@ const Encrypt = () => {
     setLoading(true)
     const data = new FormData()
     data.append('file', file)
-    data.append('email', localStorage.getItem('email'))
+    data.append('email', JSON.parse(localStorage.getItem('authUser')).email)
+
     axios
       .post(`${API_ENDPOINT}/api/send`, data, {
         // receive two parameter endpoint url ,form data
@@ -217,18 +230,18 @@ const Encrypt = () => {
         <form>
           <div className="container flex flex-col p-4 md:max-w-xl">
             <label className="text-gray-700">Upload a PDF document</label>
-            <label class="mb-4  flex flex-col items-center px-4 py-6 bg-white text-gray-700 rounded-lg shadow tracking-wide border border-blue cursor-pointer hover:bg-blue hover:text-gray-800">
-              <svg class="w-8 h-8" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+            <label className="flex flex-col items-center px-4 py-6 mb-4 tracking-wide text-gray-700 bg-white border rounded-lg shadow cursor-pointer border-blue hover:bg-blue hover:text-gray-800">
+              <svg className="w-8 h-8" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                 <path d="M16.88 9.1A4 4 0 0 1 16 17H5a5 5 0 0 1-1-9.9V7a3 3 0 0 1 4.52-2.59A4.98 4.98 0 0 1 17 8c0 .38-.04.74-.12 1.1zM11 11h3l-4-4-4 4h3v3h2v-3z" />
               </svg>
-              <span class="mt-2 text-base leading-normal">{file ? file.name : 'Select a file'}</span>
+              <span className="mt-2 text-base leading-normal">{file ? file.name : 'Select a file'}</span>
               <input name="file" type="file" accept=".pdf" className="hidden" onChange={_onChangeHandler} />
             </label>
 
             <button
               type="submit"
               onClick={_onClickHandler}
-              class="flex items-center justify-center px-4 py-2 text-white bg-gray-800 rounded shadow "
+              className="flex items-center justify-center px-4 py-2 text-white bg-gray-800 rounded shadow "
               disabled={loading}
             >
               Encrypt file
@@ -236,7 +249,7 @@ const Encrypt = () => {
           </div>
         </form>
 
-        {loading && <div class="loader">Loading...</div>}
+        {loading && <div className="loader">Loading...</div>}
       </div>
       {/* {toggleDetails && (
         <div>
@@ -263,7 +276,7 @@ const SenderSuggestionItem = ({ setSender, setSuggestions, children }) => {
         setSuggestions(null)
       }}
     >
-      <svg fill="currentColor" viewBox="0 0 20 20" className="w-6 h-6 mr-4">
+      <svg fill="currentColor" viewBox="0 0 20 20" className="flex-shrink-0 w-6 h-6 mr-4">
         <path
           fill-rule="evenodd"
           d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
@@ -329,15 +342,15 @@ const Verify = () => {
         <form>
           <div className="container flex flex-col p-4 md:max-w-xl">
             <label className="text-gray-700">Upload received file</label>
-            <label class="mb-4 flex flex-col items-center px-4 py-6 bg-white text-gray-700 rounded-lg shadow tracking-wide border border-blue cursor-pointer hover:bg-blue hover:text-gray-800">
-              <svg class="w-8 h-8" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
+            <label className="flex flex-col items-center px-4 py-6 mb-4 tracking-wide text-gray-700 bg-white border rounded-lg shadow cursor-pointer border-blue hover:bg-blue hover:text-gray-800">
+              <svg className="w-8 h-8" fill="currentColor" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                 <path d="M16.88 9.1A4 4 0 0 1 16 17H5a5 5 0 0 1-1-9.9V7a3 3 0 0 1 4.52-2.59A4.98 4.98 0 0 1 17 8c0 .38-.04.74-.12 1.1zM11 11h3l-4-4-4 4h3v3h2v-3z" />
               </svg>
-              <span class="mt-2 text-base leading-normal">{file ? file.name : 'Select a file'}</span>
+              <span className="mt-2 text-base leading-normal">{file ? file.name : 'Select a file'}</span>
               <input name="file" type="file" className="hidden" onChange={_onChangeHandler} />
             </label>
 
-            {/* <label className="text-gray-700">Sender's email</label>
+            <label className="text-gray-700">Sender's email</label>
             <div className="relative w-full">
               <input
                 type="text"
@@ -359,13 +372,13 @@ const Verify = () => {
                   strokeWidth="2"
                   viewBox="0 0 24 24"
                   stroke="currentColor"
-                  className="w-6 h-6"
+                  className="flex-shrink-0 w-6 h-6"
                 >
                   <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
               </div>
               {suggestions && (
-                <div className="absolute left-0 w-56 py-2 space-y-1 bg-white border rounded shadow-xl bottom-full">
+                <div className="absolute left-0 w-64 py-2 space-y-1 bg-white border rounded shadow-xl bottom-full">
                   {suggestions &&
                     suggestions.map((item) => (
                       <SenderSuggestionItem setSender={setSender} setSuggestions={setSuggestions}>
@@ -374,28 +387,28 @@ const Verify = () => {
                     ))}
                 </div>
               )}
-            </div> */}
+            </div>
 
             <button
               type="submit"
               onClick={_onClickHandler}
-              class="flex items-center justify-center px-4 py-2 text-white bg-gray-800 rounded shadow mt-4"
+              className="flex items-center justify-center px-4 py-2 mt-4 text-white bg-gray-800 rounded shadow"
             >
               Decrypt file
             </button>
           </div>
         </form>
 
-        {loading && <div class="loader">Loading...</div>}
+        {loading && <div className="loader">Loading...</div>}
         {error && (
           <div className="w-full ">
             <div className="flex items-center px-4 py-4 font-bold text-red-600 bg-red-200 rounded">
               <span>{error}</span>
-              <svg fill="currentColor" viewBox="0 0 20 20" className="w-6 h-6 ml-4">
+              <svg fill="currentColor" viewBox="0 0 20 20" className="flex-shrink-0 w-6 h-6 ml-4">
                 <path
-                  fill-rule="evenodd"
+                  fillRule="evenodd"
                   d="M10 1.944A11.954 11.954 0 012.166 5C2.056 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z"
-                  clip-rule="evenodd"
+                  clipRule="evenodd"
                 ></path>
               </svg>
             </div>
@@ -407,9 +420,9 @@ const Verify = () => {
               <span> The document is verified and not tampered! </span>
               <svg fill="currentColor" viewBox="0 0 20 20" className="w-6 h-6 ml-4">
                 <path
-                  fill-rule="evenodd"
+                  fillRule="evenodd"
                   d="M2.166 4.999A11.954 11.954 0 0010 1.944 11.954 11.954 0 0017.834 5c.11.65.166 1.32.166 2.001 0 5.225-3.34 9.67-8 11.317C5.34 16.67 2 12.225 2 7c0-.682.057-1.35.166-2.001zm11.541 3.708a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
-                  clip-rule="evenodd"
+                  clipRule="evenodd"
                 ></path>
               </svg>
             </div>
@@ -446,27 +459,26 @@ const Login = () => {
     provider.addScope('profile')
     provider.addScope('email')
     if (email.trim() && password.trim()) {
-      firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
-      .then(function() {
-        return firebase
-        .auth()
-        .signInWithPopup(provider)
-        .then(function (result) {
-          firebase
+      firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+        .then(function () {
+          return firebase
             .auth()
-            .signInWithEmailAndPassword(email, password)
-            .then((res) => {
-              if (res.user) {
-                Auth.setIsLoggedIn(true)
-                history.push('/')
-                localStorage.setItem('email', res.user.email)
-              }
+            .signInWithPopup(provider)
+            .then(function (result) {
+              firebase
+                .auth()
+                .signInWithEmailAndPassword(email, password)
+                .then((res) => {
+                  if (res.user) {
+                    Auth.setIsLoggedIn(true)
+                    history.push('/')
+                  }
+                })
             })
         })
-      })
-      .catch(function(error) {
-        console.log(error);
-      });
+        .catch(function (error) {
+          console.log(error);
+        });
     } else alert('Validation Error')
   }
 
@@ -475,29 +487,28 @@ const Login = () => {
     const provider = new firebase.auth.GoogleAuthProvider()
     provider.addScope('profile')
     provider.addScope('email')
-    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.SESSION)
-    .then(function() {
-      return firebase
-      .auth()
-      .signInWithPopup(provider)
-      .then(function (result) {
-        Auth.setIsLoggedIn(true)
-        history.push('/')
-        // This gives you a Google Access Token.
-        const token = result.credential.accessToken
-        // The signed-in user info.
-        const user = result.user
-        const email = user.email
-        console.log('user email is')
-        console.log(user.email)
-        axios.post(`${API_ENDPOINT}/api/register`, { email })
-        localStorage.setItem('email', email)
-        console.log(user)
+    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL)
+      .then(function () {
+        return firebase
+          .auth()
+          .signInWithPopup(provider)
+          .then(function (result) {
+            Auth.setIsLoggedIn(true)
+            history.push('/')
+            // This gives you a Google Access Token.
+            const token = result.credential.accessToken
+            // The signed-in user info.
+            const user = result.user
+            const email = user.email
+            console.log('user email is')
+            console.log(user.email)
+            axios.post(`${API_ENDPOINT}/api/register`, { email })
+            console.log(user)
+          })
       })
-    })
-    .catch(function(error) {
-      console.log(error);
-    });
+      .catch(function (error) {
+        console.log(error);
+      });
   }
 
   return (
@@ -536,7 +547,7 @@ const Login = () => {
             </button>
 
             <button
-              class=" px-8 py-4 text-white bg-white rounded shadow flex items-center space-x-4"
+              className="flex items-center px-8 py-4 space-x-4 text-white bg-white rounded shadow "
               type="button"
               onClick={authGoogle}
             >
@@ -576,7 +587,7 @@ const Register = () => {
     if (email.trim() && password.trim()) {
       firebase
         .auth()
-        .setPersistence(firebase.auth.Auth.Persistence.SESSION)
+        .setPersistence(firebase.auth.Auth.Persistence.LOCAL)
         .then(() => {
           firebase
             .auth()
@@ -585,7 +596,6 @@ const Register = () => {
               if (res) {
                 Auth.setIsLoggedIn(true)
                 axios.post(`${API_ENDPOINT}/api/register`, { email })
-                localStorage.setItem('email', email)
                 history.push('/')
               }
             })
@@ -614,7 +624,6 @@ const Register = () => {
         // The signed-in user info.
         const user = result.user
         axios.post(`${API_ENDPOINT}/api/register`, { email: user.email })
-        localStorage.setItem('email', user.email)
         console.log(user)
       })
       .catch((e) => console.log(e))
@@ -653,18 +662,13 @@ const Register = () => {
             </button>
 
             <button
-              class=" px-8 py-4 text-white bg-white rounded shadow flex items-center space-x-4"
+              className="flex items-center px-8 py-4 space-x-4 text-white bg-white rounded shadow "
               type="button"
               onClick={authGoogle}
             >
-              <svg
-                height="16"
-                viewBox="0 0 1792 1792"
-                width="16"
-                xmlns="http://www.w3.org/2000/svg"
-                className="text-white"
-              >
-                <path d="M896 786h725q12 67 12 128 0 217-91 387.5t-259.5 266.5-386.5 96q-157 0-299-60.5t-245-163.5-163.5-245-60.5-299 60.5-299 163.5-245 245-163.5 299-60.5q300 0 515 201l-209 201q-123-119-306-119-129 0-238.5 65t-173.5 176.5-64 243.5 64 243.5 173.5 176.5 238.5 65q87 0 160-24t120-60 82-82 51.5-87 22.5-78h-436v-264z" />
+
+              <svg height={16} viewBox="0 0 1792 1792" width={16} className="text-white">
+                <path d="M896 786h725q12 67 12 128 0 217-91 387.5T1282.5 1568 896 1664q-157 0-299-60.5T352 1440t-163.5-245T128 896t60.5-299T352 352t245-163.5T896 128q300 0 515 201l-209 201q-123-119-306-119-129 0-238.5 65T484 652.5 420 896t64 243.5T657.5 1316t238.5 65q87 0 160-24t120-60 82-82 51.5-87 22.5-78H896V786z" />
               </svg>
               <span className="text-black">Register with Google</span>
             </button>
