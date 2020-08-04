@@ -1,0 +1,33 @@
+{
+  "schema": "v2",
+  "application": "nisafinancesmeapi",
+  "name": "Deploy to Stage",
+  "template": {
+    "artifactAccount": "s3-artifact-storage",
+    "reference": "spinnaker://deployHelmApp",
+    "type": "front50/pipelineTemplate"
+  },
+  "variables": {
+    "appNamespace": "nisafinance",
+    "appName": "nisafinancesmeapi",
+    "branch": "*",
+    "environment": "stage-env",
+    "webhookSource": "sme-api-stage",
+    "expectedHelmChartName": "name: s3://app-helm-charts/nisafinance/sme-api/webservice, type: s3/object",
+    "helmChartReference": "s3://app-helm-charts/nisafinance/sme-api/webservice-1.0.0.tgz",
+    "overrideValuesName": "name: s3://app-helm-charts/nisafinance/sme-api/values/stage.yaml, type: s3/object",
+    "overrideValuesReference": "s3://app-helm-charts/nisafinance/sme-api/values/stage.yaml",
+    "helmBakeArtifactName": "sme-api-service",
+    "bakeStageName": "Bake New Candidate Release",
+    "deployStageName": "Deploy New Release",
+    "deployAccount": "stage"
+
+
+  },
+  "exclude": [],
+  "triggers": [],
+  "parameters": [],
+  "notifications": [],
+  "description": "Pipeline to deploy to the stage env of the nisafinance namespace",
+  "stages": []
+}

@@ -1,0 +1,129 @@
+{
+
+  "application": {
+    "name": "NisaFinance Document Verification",
+    "type": "node"
+  },
+
+  "build": {
+    "path": "",
+    "outputPath": "build",
+    "enabled": false
+  },
+
+
+  "unitTest": {
+    "enabled": false,
+    "path": "HelloTests/"
+  },
+
+  "codeQualityAnalysis":{
+    "enabled": false
+  },
+
+  "performance_testing":{
+    "enabled": false
+  },
+
+  "ATDD Test":{
+    "enabled": false
+  },
+
+
+  "archive": {
+
+    "docker_hub": {
+      "enabled": false,
+      "registry":   "docker.io",
+      "namespace":  "nisafinance",
+      "repository": "demoproject"
+    },
+
+    "aws_ecr": {
+      "enabled": true,
+      "registry":   "284889336714.dkr.ecr.us-east-2.amazonaws.com",
+      "namespace":  "nisafinance_document-verification",
+      "repository": "nisafinance_document-verification",
+      "registryID": "284889336714"
+    }
+  },
+
+  "containerImageSecurityScanning":{
+    "enabled": true,
+    "info": "This scanning is only for ECR container images"
+  },
+
+  "helmChartArchive": {
+
+    "enabled": true,
+    "chartPath": "helm-chart/webservice",
+    "chartName": "webservice",
+    "overrideValuesPath": "helm-chart/values",
+    "bucketType": "s3",
+    "chartBucket": "app-helm-charts",
+    "chartKeyPath": "nisafinance/document-verification"
+
+  },
+
+  "deploy": {
+
+    "enabled": true,
+    "devEnv": true,
+    "stageEnv": false,
+    "prodEnv": false,
+    "namespace": "nisafinance",
+    "pipelineSecretsVersion": "1",
+
+    "spinnakerExpectedArtifacts": [
+
+      {
+        "environment": "main",
+        "artifactFormat": "helmChart",
+        "type": "s3/object",
+        "name":  "s3://app-helm-charts/nisafinance/document-verification/webservice-0.0.1.tgz",
+        "reference":"s3://app-helm-charts/nisafinance/document-verification/webservice-0.0.1.tgz",
+        "location": "us-east-2",
+        "version": null
+      },
+
+      {
+        "environment": "dev",
+        "artifactFormat": "helmChart",
+        "type": "s3/object",
+        "name":  "s3://app-helm-charts/nisafinance/document-verification/values/dev.yaml",
+        "reference":"s3://app-helm-charts/nisafinance/document-verification/values/dev.yaml",
+        "location": "us-east-2",
+        "version": null
+      },
+
+      {
+        "environment": "stage",
+        "artifactFormat": "helmChart",
+        "type":       "s3/object",
+        "name":       "s3://app-helm-charts/nisafinance/document-verification/values/stage.yaml",
+        "reference":  "s3://app-helm-charts/nisafinance/document-verification/values/stage.yaml",
+        "location":   "us-east-2",
+        "version":      null
+      },
+
+      {
+        "environment": "prod",
+        "artifactFormat": "helmChart",
+        "type":       "s3/object",
+        "name":       "s3://app-helm-charts/nisafinance/document-verification/values/prod.yaml",
+        "reference":  "s3://app-helm-charts/nisafinance/document-verification/values/prod.yaml",
+        "location":   "us-east-2",
+        "version":    null
+      }
+
+    ],
+    "spinnakerUrl": "https://gate-spinnaker.bhpartners.io",
+    "spinnakerDevEnvWebhookEndpoint": "/webhooks/webhook/document-verification-dev",
+    "spinnakerStageEnvWebhookEndpoint": "/webhooks/webhook/document-verification-stage",
+    "spinnakerProdEnvWebhookEndpoint": "/webhooks/webhook/document-verification-prod",
+    "containerPort": 80
+  }
+
+}
+
+

@@ -1,0 +1,258 @@
+trigger:
+  batch: true
+  branches:
+    include:
+      - develop
+      - release-*
+      - hotfix-*
+      - master
+      - users/*/*
+
+variables:
+  - group:
+      Generic Pipeline Variables
+  - name:  BUILD_ID
+    value: $(Build.BuildNumber)
+  - name:  SOURCE_BRANCH
+    value: $(Build.SourceBranch)
+
+stages:
+  - stage: Continuous_Integration_Build_And_Test
+    displayName: 'Build and Test'
+    jobs:
+      - job: BuildAndTest
+        displayName: Build and Test
+
+        pool:
+          vmImage: 'ubuntu-latest'
+
+        container:
+          image: bhpartners/node_server:latest
+          endpoint: docker.io
+
+        steps:
+          - bash:  |
+              sudo mv * /go/src/bhpartners-generic-pipeline
+            displayName: Moving Files
+
+          - bash: |
+              cd /go/src/bhpartners-generic-pipeline
+              sudo ./main --stage build --branch $SOURCE_BRANCH
+            displayName: Build
+
+          - bash: |
+              cd /go/src/bhpartners-generic-pipeline
+              sudo ./main --stage unitTest --branch $SOURCE_BRANCH
+            displayName: Unit Tests
+
+          - bash: |
+              sudo mv /go/src/bhpartners-generic-pipeline/* .
+            displayName: Move Files
+
+          #- bash: |
+          #   cd /go/src/bhpartners-generic-pipeline
+          #   sudo -E go run main.go --stage codeQualityAnalysis
+          # displayName: Code Quality Analysis
+
+          - task: CopyFiles@2
+            displayName: Copy Files
+            inputs:
+              SourceFolder: '$(System.DefaultWorkingDirectory)'
+              Contents: |
+                **
+                !*.yaml
+                !*.yml
+                !*.md
+                !stages/**
+                !spinnaker/**
+                !*.go
+                !Gopkg.lock
+                !Gopkg.toml
+              TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+          - task: PublishPipelineArtifact@1
+            displayName: Publish Artifact
+            inputs:
+              path: '$(Build.ArtifactStagingDirectory)'
+              artifact: drop
+
+  - stage: Continuous_Integration_Code_Analysis
+    displayName: 'Code Quality Analysis'
+    jobs:
+      - job: CodeQualityAnalysis
+        displayName: Code Quality Analysis
+
+        pool:
+          vmImage: 'ubuntu-latest'
+
+        steps:
+
+          - task: SonarCloudPrepare@1
+            inputs:
+              SonarCloud: 'Sonar Cloud Code Quality and Analysis'
+              organization: '$(SONAR_CLOUD_ORGANIZATION)'
+              scannerMode: 'CLI'
+              configMode: 'file'
+          - checkout: none
+          - task: DownloadPipelineArtifact@1
+            inputs:
+              artifactName: drop
+              targetPath: '$(System.DefaultWorkingDirectory)'
+
+          - bash: |
+              git init
+            displayName: Initialize Git
+
+          - task: SonarCloudAnalyze@1
+          - task: SonarCloudPublish@1
+            inputs:
+              pollingTimeoutSec: '300'
+
+  - stage: Archive_Container_Registry
+    displayName: 'Archive to Container Registry'
+    condition: and(succeeded(),in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'),or(startsWith(variables['Build.SourceBranch'], 'refs/heads/users/'),startsWith(variables['Build.SourceBranch'], 'refs/heads/develop'),startsWith(variables['Build.SourceBranch'], 'refs/heads/release'),startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'),startsWith(variables['Build.SourceBranch'], 'refs/heads/master')))
+    jobs:
+      - job:
+        displayName: 'Archive to Container Registry'
+        pool:
+          vmImage: 'ubuntu-latest'
+        container:
+          image: bhpartners/node_server:latest
+          endpoint: docker.io
+        variables:
+          ARTIFACT_DIRECTORY: $(System.DefaultWorkingDirectory)
+
+        steps:
+
+          - checkout: none
+          - task: DownloadPipelineArtifact@1
+            inputs:
+              artifactName: drop
+              targetPath: '$(System.DefaultWorkingDirectory)'
+
+          - bash: |
+              sudo mv * /go/src/bhpartners-generic-pipeline
+            displayName: Moving Files
+
+          - bash: |
+              cd /go/src/bhpartners-generic-pipeline
+              sudo -E go run main.go --stage archive --buildId $BUILD_ID --branch $SOURCE_BRANCH
+            displayName: Archive to Container Registry
+
+          - bash: |
+              cd /go/src/bhpartners-generic-pipeline
+              sudo mv * $ARTIFACT_DIRECTORY
+            displayName: Move Files back
+
+          - task: CopyFiles@2
+            displayName: Copy Files
+            inputs:
+              SourceFolder: '$(System.DefaultWorkingDirectory)'
+              Contents: |
+                **
+                !*.yaml
+                !*.yml
+                !*.md
+                !stages/**
+                !spinnaker/**
+                !*.go
+                !Gopkg.lock
+                !Gopkg.toml
+              TargetFolder: '$(Build.ArtifactStagingDirectory)'
+
+          - task: PublishPipelineArtifact@1
+            displayName: Publish Artifact With Updated Helm Chart Values
+            inputs:
+              path: '$(Build.ArtifactStagingDirectory)'
+              artifact: drop2
+
+  - stage: Container_Image_Scanning
+    displayName: 'Container Image Scanning'
+    condition: and(succeeded(), and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'),not(startsWith(variables['Build.SourceBranch'], 'refs/heads/users/'))))
+    jobs:
+      - job:
+        displayName: 'Container Image Scanning'
+        pool:
+          vmImage: 'ubuntu-latest'
+
+        container:
+          image: bhpartners/node_server:latest
+          endpoint: docker.io
+
+        steps:
+
+          - checkout: none
+          - task: DownloadPipelineArtifact@1
+            inputs:
+              artifactName: drop2
+              targetPath: '$(System.DefaultWorkingDirectory)'
+
+          - bash: |
+              sudo mv * /go/src/bhpartners-generic-pipeline
+            displayName: Moving Files
+
+          - bash: |
+              cd /go/src/bhpartners-generic-pipeline
+              sudo -E go run main.go --stage containerImageScanning --buildId $BUILD_ID --branch $SOURCE_BRANCH
+            displayName: Container Image Scanning
+
+  - stage: App_Helm_Chart_Archive
+    displayName: 'App Helm Chart Archive'
+    condition: and(succeeded(), and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'),not(startsWith(variables['Build.SourceBranch'], 'refs/heads/users/'))))
+    jobs:
+      - job:
+        displayName: 'App Helm Chart Archive'
+        pool:
+          vmImage: 'ubuntu-latest'
+
+        container:
+          image: bhpartners/node_server:latest
+          endpoint: docker.io
+
+        steps:
+
+          - checkout: none
+          - task: DownloadPipelineArtifact@1
+            inputs:
+              artifactName: drop2
+              targetPath: '$(System.DefaultWorkingDirectory)'
+
+          - bash: |
+              sudo mv * /go/src/bhpartners-generic-pipeline
+            displayName: Moving Files
+
+          - bash: |
+              cd /go/src/bhpartners-generic-pipeline
+              sudo -E go run main.go --stage helmChartArchiving --buildId $BUILD_ID --branch $SOURCE_BRANCH
+            displayName: App Helm Chart Archive
+
+  - stage: Deploy_Application
+    displayName: 'Deploy Application'
+    condition: and(succeeded(), and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'),not(startsWith(variables['Build.SourceBranch'], 'refs/heads/users/'))))
+    jobs:
+      - job:
+        displayName: 'Deploy Application'
+        pool:
+          vmImage: 'ubuntu-latest'
+
+        container:
+          image: bhpartners/node_server:latest
+          endpoint: docker.io
+
+        steps:
+
+          - checkout: none
+          - task: DownloadPipelineArtifact@1
+            inputs:
+              artifactName: drop2
+              targetPath: '$(System.DefaultWorkingDirectory)'
+
+          - bash: |
+              sudo mv * /go/src/bhpartners-generic-pipeline
+            displayName: Moving Files
+
+          - bash: |
+              cd /go/src/bhpartners-generic-pipeline
+              sudo -E go run main.go --stage deploy --buildId $BUILD_ID --branch $SOURCE_BRANCH
+            displayName: Deploy Application
+

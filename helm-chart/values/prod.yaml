@@ -1,0 +1,16 @@
+replicaCount: 1
+
+image:
+  repository: 284889336714.dkr.ecr.us-east-2.amazonaws.com/nisafinance_document-verification
+  tag:  "1.3.2"
+  pullPolicy: Always
+
+tier: "backend"
+environment: "prod"
+
+
+container:
+  env:
+    NODE_ENV: "production"
+    HOST: "api.nisafinance.com"
+    LOCAL_DEV: false

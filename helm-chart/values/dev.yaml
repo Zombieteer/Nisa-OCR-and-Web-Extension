@@ -1,0 +1,23 @@
+replicaCount: 1
+
+image:
+  repository: 284889336714.dkr.ecr.us-east-2.amazonaws.com/nisafinance_document-verification
+  tag:  "dev_20200414.17"
+  pullPolicy: Always
+
+tier: "backend"
+environment: "dev"
+
+
+container:
+  env:
+    NODE_ENV: "development"
+    HOST: "doclock.nisafinance.com"
+    LOCAL_DEV: false
+
+
+
+ingress:
+  hosts:
+    - host: doclock.nisafinance.com
+      paths: ["/"]

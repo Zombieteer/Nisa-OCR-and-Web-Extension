@@ -1,0 +1,88 @@
+# Default values for webservice.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 3
+
+image:
+  repository: 284889336714.dkr.ecr.us-east-2.amazonaws.com/nisafinance_sme-ui
+  tag:  "latest"
+  pullPolicy: Always
+
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: ""
+
+tier: "frontend"
+environment: "production"
+
+container:
+  port: 80
+
+
+rollingUpdate:
+  maxUnavailable: 25%
+  maxSurge: 25%
+
+serviceAccount:
+  # Specifies whether a service account should be created
+  create: true
+  # The name of the service account to use.
+  # If not set and create is true, a name is generated using the fullname template
+  name:
+
+podSecurityContext: {}
+  # fsGroup: 2000
+
+securityContext: {}
+  # capabilities:
+  #   drop:
+  #   - ALL
+  # readOnlyRootFilesystem: true
+  # runAsNonRoot: true
+  # runAsUser: 1000s
+podAnnotations:
+  {}
+
+deploymentAnnotations:
+  {#traffic.spinnaker.io/load-balancers: '["service react-demo-service-webservice"]',
+   strategy.spinnaker.io/max-version-history: '5'
+  }
+
+service:
+  type: ClusterIP
+  port: 80
+
+ingress:
+  enabled: true
+  annotations:
+      kubernetes.io/ingress.class: ambassador
+      kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: app.nisafinance.com
+      paths: ["/"]
+  #tls: Managed by Ambassador
+   # - secretName: nisafinance-tls
+    #  hosts:
+     #   - app.nisafinance.com
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #   cpu: 100m
+  #   memory: 128Mi
+  # requests:
+  #   cpu: 100m
+  #   memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}
+
+
+

@@ -1,0 +1,33 @@
+{
+  "schema": "v2",
+  "application": "nfdocumentverification",
+  "name": "Deploy to Dev",
+  "template": {
+    "artifactAccount": "s3-artifact-storage",
+    "reference": "spinnaker://deployHelmApp",
+    "type": "front50/pipelineTemplate"
+  },
+  "variables": {
+    "appNamespace": "nisafinance",
+    "appName": "nisafinancesmeapi",
+    "branch": "refs/heads/develop",
+    "environment": "dev-env",
+    "webhookSource": "document-verification-dev",
+    "expectedHelmChartName": "name: s3://app-helm-charts/nisafinance/document-verification/webservice, type: s3/object",
+    "helmChartReference": "s3://app-helm-charts/nisafinance/document-verification/webservice-1.0.0.tgz",
+    "overrideValuesName": "name: s3://app-helm-charts/nisafinance/document-verification/values/dev.yaml, type: s3/object",
+    "overrideValuesReference": "s3://app-helm-charts/nisafinance/document-verification/values/dev.yaml",
+    "helmBakeArtifactName": "document-verification-service",
+    "bakeStageName": "Bake Image",
+    "deployStageName": "Deploy Dev Image",
+    "deployAccount": "dev"
+
+
+  },
+  "exclude": [],
+  "triggers": [],
+  "parameters": [],
+  "notifications": [],
+  "description": "Pipeline to deploy to the dev env of the nisafinance namespace",
+  "stages": []
+}
