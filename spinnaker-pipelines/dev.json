@@ -9,7 +9,7 @@
   },
   "variables": {
     "appNamespace": "nisafinance",
-    "appName": "nisafinancesmeapi",
+    "appName": "nfdocumentverification",
     "branch": "refs/heads/develop",
     "environment": "dev-env",
     "webhookSource": "document-verification-dev",
