@@ -78,6 +78,8 @@ stages:
 
   - stage: Continuous_Integration_Code_Analysis
     displayName: 'Code Quality Analysis'
+    condition: and(succeeded(), and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'),not(startsWith(variables['Build.SourceBranch'], 'refs/heads/develop'))))
+
     jobs:
       - job: CodeQualityAnalysis
         displayName: Code Quality Analysis
@@ -107,10 +109,10 @@ stages:
           - task: SonarCloudPublish@1
             inputs:
               pollingTimeoutSec: '300'
-
+ 
   - stage: Archive_Container_Registry
     displayName: 'Archive to Container Registry'
-    condition: and(succeeded(),in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'),or(startsWith(variables['Build.SourceBranch'], 'refs/heads/users/'),startsWith(variables['Build.SourceBranch'], 'refs/heads/develop'),startsWith(variables['Build.SourceBranch'], 'refs/heads/release'),startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'),startsWith(variables['Build.SourceBranch'], 'refs/heads/master')))
+    condition: and(always(),in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'),or(startsWith(variables['Build.SourceBranch'], 'refs/heads/users/'),startsWith(variables['Build.SourceBranch'], 'refs/heads/develop'),startsWith(variables['Build.SourceBranch'], 'refs/heads/release'),startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'),startsWith(variables['Build.SourceBranch'], 'refs/heads/master')))
     jobs:
       - job:
         displayName: 'Archive to Container Registry'
@@ -168,7 +170,7 @@ stages:
 
   - stage: Container_Image_Scanning
     displayName: 'Container Image Scanning'
-    condition: and(succeeded(), and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'),not(startsWith(variables['Build.SourceBranch'], 'refs/heads/users/'))))
+    condition: and(always(), and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'),not(startsWith(variables['Build.SourceBranch'], 'refs/heads/users/'))))
     jobs:
       - job:
         displayName: 'Container Image Scanning'
@@ -198,7 +200,7 @@ stages:
 
   - stage: App_Helm_Chart_Archive
     displayName: 'App Helm Chart Archive'
-    condition: and(succeeded(), and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'),not(startsWith(variables['Build.SourceBranch'], 'refs/heads/users/'))))
+    condition: and(always(), and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'),not(startsWith(variables['Build.SourceBranch'], 'refs/heads/users/'))))
     jobs:
       - job:
         displayName: 'App Helm Chart Archive'
@@ -228,7 +230,7 @@ stages:
 
   - stage: Deploy_Application
     displayName: 'Deploy Application'
-    condition: and(succeeded(), and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'),not(startsWith(variables['Build.SourceBranch'], 'refs/heads/users/'))))
+    condition: and(always(), and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'),not(startsWith(variables['Build.SourceBranch'], 'refs/heads/users/'))))
     jobs:
       - job:
         displayName: 'Deploy Application'
