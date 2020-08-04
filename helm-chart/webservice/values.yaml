@@ -17,7 +17,7 @@ tier: "frontend"
 environment: "production"
 
 container:
-  port: 80
+  port: 3001
 
 
 rollingUpdate:
@@ -51,7 +51,7 @@ deploymentAnnotations:
 
 service:
   type: ClusterIP
-  port: 80
+  port: 3001
 
 ingress:
   enabled: true
@@ -59,7 +59,7 @@ ingress:
       kubernetes.io/ingress.class: ambassador
       kubernetes.io/tls-acme: "true"
   hosts:
-    - host: app.nisafinance.com
+    - host: docklock.nisafinance.com
       paths: ["/"]
   #tls: Managed by Ambassador
    # - secretName: nisafinance-tls
