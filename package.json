@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "build": "rm -rf build && cd client && yarn build  && mv build ../",
+    "build": "rm -rf build && cd client && yarn install && yarn build  && mv build ../",
     "dev": "nodemon npm start"
   },
   "dependencies": {
