@@ -49,8 +49,9 @@
   },
 
   "containerImageSecurityScanning":{
-    "enabled": true,
-    "info": "This scanning is only for ECR container images"
+    "enabled": false,
+    "info": "This scanning is only for ECR container images",
+    "error": "ascii' codec can't encode character '\\u201c' in position 334: ordinal not in range(128)\n"
   },
 
   "helmChartArchive": {
