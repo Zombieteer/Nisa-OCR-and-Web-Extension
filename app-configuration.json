@@ -8,7 +8,7 @@
   "build": {
     "path": "",
     "outputPath": "build",
-    "enabled": false
+    "enabled": true
   },
 
 
