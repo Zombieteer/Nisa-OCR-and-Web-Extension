@@ -75,41 +75,7 @@ stages:
             inputs:
               path: '$(Build.ArtifactStagingDirectory)'
               artifact: drop
-
-  - stage: Continuous_Integration_Code_Analysis
-    displayName: 'Code Quality Analysis'
-    condition: and(succeeded(), and(in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'),not(startsWith(variables['Build.SourceBranch'], 'refs/heads/develop'))))
-
-    jobs:
-      - job: CodeQualityAnalysis
-        displayName: Code Quality Analysis
-
-        pool:
-          vmImage: 'ubuntu-latest'
-
-        steps:
-
-          - task: SonarCloudPrepare@1
-            inputs:
-              SonarCloud: 'Sonar Cloud Code Quality and Analysis'
-              organization: '$(SONAR_CLOUD_ORGANIZATION)'
-              scannerMode: 'CLI'
-              configMode: 'file'
-          - checkout: none
-          - task: DownloadPipelineArtifact@1
-            inputs:
-              artifactName: drop
-              targetPath: '$(System.DefaultWorkingDirectory)'
-
-          - bash: |
-              git init
-            displayName: Initialize Git
-
-          - task: SonarCloudAnalyze@1
-          - task: SonarCloudPublish@1
-            inputs:
-              pollingTimeoutSec: '300'
- 
+              
   - stage: Archive_Container_Registry
     displayName: 'Archive to Container Registry'
     condition: and(always(),in(variables['Build.Reason'], 'IndividualCI', 'BatchedCI'),or(startsWith(variables['Build.SourceBranch'], 'refs/heads/users/'),startsWith(variables['Build.SourceBranch'], 'refs/heads/develop'),startsWith(variables['Build.SourceBranch'], 'refs/heads/release'),startsWith(variables['Build.SourceBranch'], 'refs/heads/hotfix'),startsWith(variables['Build.SourceBranch'], 'refs/heads/master')))
