@@ -4,7 +4,7 @@ services:
     container_name: nisa_ocr
     build:
       context: .
-      dockerfile: deployment/Dockerfile
+      dockerfile: Dockerfile
     image: nisa_ocr_server
     ports:
         - "3001:3001"
