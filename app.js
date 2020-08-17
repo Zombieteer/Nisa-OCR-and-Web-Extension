@@ -67,7 +67,7 @@ app.post("/api/send", async (req, res, next) => {
   const sentFile = req.files.file;
   const { email } = req.body;
 
-  const bucketName = "project-ocr-bucket";
+  const bucketName = "nisa-project-ocr";
   const fileName = `${sentFile.name.split(".")[0]}.pdf`;
 
   const uploadFile = async () => {
@@ -81,7 +81,7 @@ app.post("/api/send", async (req, res, next) => {
 
   const getFileByPrefix = async (prefix) => {
     const [files] = await storage
-      .bucket("project-ocr-bucket")
+      .bucket("nisa-project-ocr")
       .getFiles({ prefix });
     // console.log(files[0])
     return files[0];
@@ -215,7 +215,7 @@ app.post("/api/receive", async (req, res, next) => {
     console.log(hash);
     console.log(1);
 
-    const bucketName = "project-ocr-bucket";
+    const bucketName = "nisa-project-ocr";
     const fileName = `${sentFile.name.split(".")[0]}.pdf`;
 
     const uploadFile = async () => {
@@ -272,7 +272,7 @@ app.post("/api/receive", async (req, res, next) => {
     const getFileByPrefix = async (prefix) => {
       console.log(4);
       const [files] = await storage
-        .bucket("project-ocr-bucket")
+        .bucket("nisa-project-ocr")
         .getFiles({ prefix });
       // console.log(files[0])
       return files[0];
