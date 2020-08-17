@@ -17,6 +17,7 @@ RUN apk add --update curl python bash &&  rm -rf /var/cache/apk/*
 RUN curl -sSL https://sdk.cloud.google.com > /tmp/gcl && bash /tmp/gcl --install-dir=~/gcloud --disable-prompts
 ENV PATH $PATH:/root/gcloud/google-cloud-sdk/bin
 ENV CLOUDSDK_CORE_DISABLE_PROMPTS=1
+#VOLUME ~/.config  /root/.config
 RUN gcloud beta auth configure-docker
 RUN gcloud auth activate-service-account --key-file project-ocr.json
 #RUN gcloud auth application-default login

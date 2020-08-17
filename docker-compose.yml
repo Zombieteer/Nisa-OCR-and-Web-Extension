@@ -8,6 +8,8 @@ services:
     image: nisa_ocr_server
     ports:
         - "3001:3001"
+    #volumes:
+     # - ~/.config/gcloud:/root/.config/gcloud    
     networks:
       - web
 networks:

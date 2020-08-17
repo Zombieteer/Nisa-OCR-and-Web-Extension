@@ -36,9 +36,9 @@ const visionClient = new vision.ImageAnnotatorClient({
 // const authClient = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URL)
 const storage = new Storage({
   keyFile: "project-ocr.json",
-  projectId: "project-ocr-282210",
+  projectId: "project-ocr-150620",
 });
-const firestore = new Firestore({ projectId: "project-ocr-282210" });
+const firestore = new Firestore({ projectId: "project-ocr-150620" });
 
 const app = express();
 
