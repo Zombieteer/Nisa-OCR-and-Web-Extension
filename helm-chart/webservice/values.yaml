@@ -5,7 +5,7 @@
 replicaCount: 3
 
 image:
-  repository: 284889336714.dkr.ecr.us-east-2.amazonaws.com/nisafinance_sme-ui
+  repository: 284889336714.dkr.ecr.us-east-2.amazonaws.com/nisafinance_document-verification
   tag:  "latest"
   pullPolicy: Always
 
@@ -32,7 +32,7 @@ serviceAccount:
   name:
 
 podSecurityContext: {}
-  # fsGroup: 2000
+# fsGroup: 2000
 
 securityContext: {}
   # capabilities:
@@ -40,13 +40,13 @@ securityContext: {}
   #   - ALL
   # readOnlyRootFilesystem: true
   # runAsNonRoot: true
-  # runAsUser: 1000s
+# runAsUser: 1000s
 podAnnotations:
   {}
 
 deploymentAnnotations:
   {#traffic.spinnaker.io/load-balancers: '["service react-demo-service-webservice"]',
-   strategy.spinnaker.io/max-version-history: '5'
+    strategy.spinnaker.io/max-version-history: '5'
   }
 
 service:
@@ -56,15 +56,15 @@ service:
 ingress:
   enabled: true
   annotations:
-      kubernetes.io/ingress.class: ambassador
-      kubernetes.io/tls-acme: "true"
+    kubernetes.io/ingress.class: ambassador
+    kubernetes.io/tls-acme: "true"
   hosts:
-    - host: docklock.nisafinance.com
+    - host: doclock.nisafinance.com
       paths: ["/"]
-  #tls: Managed by Ambassador
-   # - secretName: nisafinance-tls
+    #tls: Managed by Ambassador
+    # - secretName: nisafinance-tls
     #  hosts:
-     #   - app.nisafinance.com
+    #   - app.nisafinance.com
 
 resources: {}
   # We usually recommend not to specify default resources and to leave this as a conscious
@@ -76,7 +76,7 @@ resources: {}
   #   memory: 128Mi
   # requests:
   #   cpu: 100m
-  #   memory: 128Mi
+#   memory: 128Mi
 
 nodeSelector: {}
 

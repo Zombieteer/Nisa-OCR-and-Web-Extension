@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: {{ include "webservice.fullname" . }}
   labels:
-    {{- include "webservice.labels" . | nindent 4 }}
+  {{- include "webservice.labels" . | nindent 4 }}
   namespace: {{.Release.Namespace}}
   {{- if .Values.deploymentAnnotations }}
   annotations:
@@ -14,31 +14,31 @@ spec:
   strategy:
     type: RollingUpdate
     rollingUpdate:
-     maxUnavailable: {{.Values.rollingUpdate.maxUnavailable}}
-     maxSurge: {{.Values.rollingUpdate.maxSurge}} #how many pods we can add at a time
+      maxUnavailable: {{.Values.rollingUpdate.maxUnavailable}}
+      maxSurge: {{.Values.rollingUpdate.maxSurge}} #how many pods we can add at a time
   selector:
     matchLabels:
-      {{- include "webservice.selectorLabels" . | nindent 6 }}
+  {{- include "webservice.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        {{- include "webservice.selectorLabels" . | nindent 8 }}
-        {{- if .Values.podAnnotations }}
+      {{- include "webservice.selectorLabels" . | nindent 8 }}
+      {{- if .Values.podAnnotations }}
       annotations:
-      {{- toYaml .Values.podAnnotations | nindent 8 }}
+    {{- toYaml .Values.podAnnotations | nindent 8 }}
     {{- end }}
     spec:
-    {{- with .Values.imagePullSecrets }}
+      {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
       serviceAccountName: {{ include "webservice.serviceAccountName" . }}
       securityContext:
-        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: {{ .Chart.Name }}
           securityContext:
-            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- toYaml .Values.securityContext | nindent 12 }}
           image: "{{ .Values.image.repository }}:{{.Values.image.tag}}"
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           ports:
@@ -64,16 +64,16 @@ spec:
             successThreshold: 1
             timeoutSeconds: 5
           resources:
-            {{- toYaml .Values.resources | nindent 12 }}
+      {{- toYaml .Values.resources | nindent 12 }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
-        {{- toYaml . | nindent 8 }}
+      {{- toYaml . | nindent 8 }}
       {{- end }}
-    {{- with .Values.affinity }}
+      {{- with .Values.affinity }}
       affinity:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
-    {{- with .Values.tolerations }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
       tolerations:
-        {{- toYaml . | nindent 8 }}
-    {{- end }}
+    {{- toYaml . | nindent 8 }}
+  {{- end }}
