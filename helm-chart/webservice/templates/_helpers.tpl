@@ -51,7 +51,7 @@ Selector labels
 {{- define "webservice.selectorLabels" -}}
 app.kubernetes.io/name: {{ include "webservice.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
-appType: "lightWeight"
+appType: "heavyWeight"
 {{- end -}}
 
 {{/*
