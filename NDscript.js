@@ -11,12 +11,13 @@ InboxSDK.load(2, "sdk_NesaDocLock_70621e1bb4").then(function (sdk) {
 });
 
 const btnClickHandler = async (event, sdk) => {
-  let sender, loggedInUser, attachment;
+  let sender, loggedInUser, attachment, attachment_name;
   if (event.position === "THREAD") {
     loggedInUser = await sdk.User.getEmailAddress();
 
     await sdk.Conversations.registerMessageViewHandler(async (messageView) => {
       sender = messageView.getSender();
+
       attachment =
         messageView.getFileAttachmentCardViews()[0] &&
         messageView.getFileAttachmentCardViews()[0]
@@ -26,9 +27,13 @@ const btnClickHandler = async (event, sdk) => {
           ? messageView.getFileAttachmentCardViews()[0]
               ._attachmentCardImplementation._element
           : [];
-    });
 
-    console.log(sender, loggedInUser, attachment);
+      !Array.isArray(attachment)
+        ? (attachment_name = messageView
+            .getFileAttachmentCardViews()[0]
+            ._attachmentCardImplementation._element.innerText.split(/\n/)[1])
+        : (attachment_name = "");
+    });
 
     Email.send({
       SecureToken: "ce8a1081-19cd-4ab5-bc49-8b0f9b893d64",
@@ -37,13 +42,23 @@ const btnClickHandler = async (event, sdk) => {
       // Password: "nisafinance",
       To: loggedInUser,
       From: "nisadoclock@gmail.com",
-      Subject: "This is the subject",
-      Body: "And this is the body",
+      Subject: "Protected file reverted by NisaDoclock",
+      Body:
+        "Download the attachment from this mail and upload it as your documents in NisaFinance",
+      Attachments: [
+        {
+          name: `Nisa_Encrypted_${attachment_name}`,
+          path:
+            "https://networkprogramming.files.wordpress.com/2017/11/smtpjs.png",
+        },
+      ],
     }).then((message) => {
       if (message === "OK") {
         alert("Protected file has been reverted to your mail");
       } else {
-        alert("Mail sending failed");
+        alert(
+          "Mail sending failed, please try again or contact Nisa Finance Support"
+        );
       }
     });
   }
