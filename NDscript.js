@@ -3,7 +3,7 @@ InboxSDK.load(2, "sdk_NesaDocLock_70621e1bb4").then(function (sdk) {
   sdk.Toolbars.registerThreadButton({
     title: "Encrypt File",
     iconUrl: chrome.runtime.getURL("logos/logo_128.png"),
-    iconClass: "nesa-btn",
+    iconClass: "nisa-btn",
     positions: ["THREAD"],
     listSection: sdk.Toolbars.SectionNames.OTHER,
     onClick: (event) => btnClickHandler(event, sdk),

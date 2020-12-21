@@ -1,5 +1,5 @@
 {
-  "name": "Nesa Docklock",
+  "name": "Nisa Doclock",
   "description": "Encrypt and Verify your documents using cryptography techniques",
   "version": "0.0.1",
   "manifest_version": 2,
@@ -18,8 +18,12 @@
   },
   "content_scripts": [
     {
-      "matches": ["https://mail.google.com/*", "https://inbox.google.com/*"],
-      "js": ["inboxsdk.js","smtp.js", "NDscript.js"]
+      "matches": [
+        "https://mail.google.com/*",
+        "https://inbox.google.com/*",
+        "*://localhost/*"
+      ],
+      "js": ["inboxsdk.js", "smtp.js", "NDscript.js"]
     }
   ],
   "permissions": [
@@ -29,7 +33,5 @@
     "https://mail.google.com/",
     "https://inbox.google.com/"
   ],
-  "web_accessible_resources": [
-    "*.png"
-  ]
+  "web_accessible_resources": ["*.png"]
 }
