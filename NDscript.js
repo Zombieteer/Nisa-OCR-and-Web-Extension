@@ -14,64 +14,67 @@ InboxSDK.load(2, inboxSdkId).then(function (sdk) {
 });
 
 const getAttachments = async (sdk) => {
-  let attachments = [];
+  let filesToEncypt = [];
   let sender;
+
   await sdk.Conversations.registerMessageViewHandler(async (messageView) => {
     sender = messageView.getSender();
+    let items = messageView.getFileAttachmentCardViews();
 
-    messageView.getFileAttachmentCardViews().length &&
-      messageView.getFileAttachmentCardViews().forEach((item) => {
-        let attachment = item._attachmentCardImplementation._element;
-        let download_url = attachment.attributes.getNamedItem("download_url")
-          .textContent;
-        let re = /([^:]+):([^:]+):(.+)/;
-        let match = re.exec(download_url);
+    if (messageView.isLoaded() && items.length) {
+      for (let item of items) {
+        try {
+          let attachment = item._attachmentCardImplementation._element;
+          let download_url = attachment.attributes.getNamedItem("download_url")
+            .textContent;
+          let re = /([^:]+):([^:]+):(.+)/;
+          let match = re.exec(download_url);
 
-        const contentType = match[1];
-        const name = decodeURI(match[2]);
-        const contentLink = match[3];
+          const contentType = match[1];
+          const name = decodeURI(match[2]);
+          const contentLink = match[3];
 
-        fetch(contentLink)
-          .then((response) => {
-            const reader = response.body.getReader();
-            return new ReadableStream({
-              start(controller) {
-                return pump();
-                function pump() {
-                  return reader.read().then(({ done, value }) => {
-                    if (done) {
-                      controller.close();
-                      return;
-                    }
-                    controller.enqueue(value);
-                    return pump();
-                  });
-                }
-              },
-            });
-          })
-          .then((stream) => new Response(stream))
-          .then((response) => response.blob())
-          .then((blob) => {
-            let file = new File([blob], name, { type: contentType });
-            // const url = URL.createObjectURL(file);
+          let response = await fetch(contentLink);
+          // let reader = response.body.getReader();
+          // let stream = new ReadableStream({
+          //   async start(controller) {
+          //     return await pump();
+          //     async function pump() {
+          //       let { done, value } = await reader.read();
+          //       if (done) {
+          //         controller.close();
+          //         return;
+          //       }
+          //       controller.enqueue(value);
+          //       return await pump();
+          //     }
+          //   },
+          // });
+          // response = new Response(stream);
+          let blob = await response.blob();
+          let file = new File([blob], name, { type: contentType });
 
-            // let link = document.createElement("a");
-            // link.href = url;
-            // link.setAttribute("download", "file.pdf");
-            // link.click();
-          })
-          .catch((err) => console.error(err));
+          // const url = URL.createObjectURL(file);
+          // let link = document.createElement("a");
+          // link.href = url;
+          // link.setAttribute("download", "file.pdf");
+          // link.click();
 
-        attachments.push({
-          name: `Nisa_Encrypted_${name}`,
-          path: contentLink,
-        });
+          filesToEncypt.push({
+            name: name,
+            file,
+          });
+          console.log(filesToEncypt);
 
-        console.log(match);
-      });
+          console.log(match);
+        } catch (error) {
+          console.log(error);
+        }
+      }
+    }
   });
-  return {attachments, sender};
+
+  return { filesToEncypt, sender };
 };
 
 const sendMail = (sdk, loggedInUser, attachments) => {
@@ -126,13 +129,45 @@ const btnClickHandler = async (event, sdk) => {
     document.querySelector(".inboxsdk__modal_content").style.marginTop = 0;
 
     // get attachments
-    let {attachments, sender} = await getAttachments(sdk);
+    let { filesToEncypt, sender } = await getAttachments(sdk);
+    console.log(filesToEncypt, sender);
 
     attachment_read_modal.close();
 
     // encrypt file
 
     // send mail
-    sendMail(sdk, loggedInUser, attachments);
+    // if (attachments.length) sendMail(sdk, loggedInUser, attachments);
   }
 };
+
+// fetch(contentLink)
+//   .then((response) => {
+//     const reader = response.body.getReader();
+//     return new ReadableStream({
+//       start(controller) {
+//         return pump();
+//         function pump() {
+//           return reader.read().then(({ done, value }) => {
+//             if (done) {
+//               controller.close();
+//               return;
+//             }
+//             controller.enqueue(value);
+//             return pump();
+//           });
+//         }
+//       },
+//     });
+//   })
+//   .then((stream) => new Response(stream))
+//   .then((response) => response.blob())
+//   .then((blob) => {
+//     let file = new File([blob], name, { type: contentType });
+//     filesToEncypt.push({
+//       name: name,
+//       file,
+//     });
+//     console.log(filesToEncypt);
+//   })
+//   .catch((err) => console.error(err));
