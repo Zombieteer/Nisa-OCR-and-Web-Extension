@@ -13,13 +13,6 @@ InboxSDK.load(2, inboxSdkId).then(function (sdk) {
   });
 });
 
-const btnClickHandler = async (event, sdk) => {
-  if (event.position === "THREAD") {
-    // get attachments
-    await getAttachments(sdk);
-  }
-};
-
 const getAttachments = async (sdk) => {
   let filesToEncypt = [];
   let sender;
@@ -28,16 +21,7 @@ const getAttachments = async (sdk) => {
     sender = messageView.getSender();
     let items = messageView.getFileAttachmentCardViews();
 
-    //retrieve attachments to encrypt
     if (messageView.isLoaded() && items.length) {
-      
-      // open getting attachment modal
-      let attachment_read_modal = sdk.Widgets.showModalView({
-        title: "Please Wait...",
-        el: "<div>Attachments are being read</div>",
-      });
-      document.querySelector(".inboxsdk__modal_content").style.marginTop = 0;
-
       for (let item of items) {
         try {
           let attachment = item._attachmentCardImplementation._element;
@@ -51,6 +35,22 @@ const getAttachments = async (sdk) => {
           const contentLink = match[3];
 
           let response = await fetch(contentLink);
+          // let reader = response.body.getReader();
+          // let stream = new ReadableStream({
+          //   async start(controller) {
+          //     return await pump();
+          //     async function pump() {
+          //       let { done, value } = await reader.read();
+          //       if (done) {
+          //         controller.close();
+          //         return;
+          //       }
+          //       controller.enqueue(value);
+          //       return await pump();
+          //     }
+          //   },
+          // });
+          // response = new Response(stream);
           let blob = await response.blob();
           let file = new File([blob], name, { type: contentType });
 
@@ -71,30 +71,14 @@ const getAttachments = async (sdk) => {
           console.log(error);
         }
       }
-
-      console.log("attachment retrieved", filesToEncypt);
-
-      // close getting attachment modal
-      attachment_read_modal.close();
-
-      // encrypt file
-
-      // send mail
-      let attachments = [];
-      sendMail(sdk, attachments);
     }
   });
+
+  return { filesToEncypt, sender };
 };
 
-const sendMail = async (sdk, attachments) => {
-  // open sending mail modal
-  let sending_mail_modal = sdk.Widgets.showModalView({
-    title: "Please Wait...",
-    el: "<div>Mail is being reverter with protected attachments</div>",
-  });
-  document.querySelector(".inboxsdk__modal_content").style.marginTop = 0;
-
-  const showResponseModal = (title, message) => {
+const sendMail = (sdk, loggedInUser, attachments) => {
+  const showModal = (title, message) => {
     let mail_sent_modal = sdk.Widgets.showModalView({
       title,
       el: `<div>${message}</div>`,
@@ -110,8 +94,6 @@ const sendMail = async (sdk, attachments) => {
     document.querySelector(".inboxsdk__modal_content").style.margin = 0;
   };
 
-  let loggedInUser = await sdk.User.getEmailAddress();
-
   Email.send({
     SecureToken: mailClientSecureToken,
     // Host: "smtp.gmail.com",
@@ -125,17 +107,67 @@ const sendMail = async (sdk, attachments) => {
     Attachments: attachments,
   }).then((message) => {
     if (message === "OK") {
-      sending_mail_modal.close();
-      showResponseModal(
-        "Success",
-        "Mail has been reverted, please check inbox"
-      );
+      showModal("Success", "Mail has been reverted, please check inbox");
     } else {
-      sending_mail_modal.close();
-      showResponseModal(
+      showModal(
         "Failed / Error",
         "Mail sending failed, please try again or contact support@nisafinance.com"
       );
     }
   });
 };
+
+const btnClickHandler = async (event, sdk) => {
+  let loggedInUser;
+  if (event.position === "THREAD") {
+    loggedInUser = await sdk.User.getEmailAddress();
+
+    let attachment_read_modal = sdk.Widgets.showModalView({
+      title: "Please Wait...",
+      el: "<div>Attachments are being read</div>",
+    });
+    document.querySelector(".inboxsdk__modal_content").style.marginTop = 0;
+
+    // get attachments
+    let { filesToEncypt, sender } = await getAttachments(sdk);
+    console.log(filesToEncypt, sender);
+
+    attachment_read_modal.close();
+
+    // encrypt file
+
+    // send mail
+    // if (attachments.length) sendMail(sdk, loggedInUser, attachments);
+  }
+};
+
+// fetch(contentLink)
+//   .then((response) => {
+//     const reader = response.body.getReader();
+//     return new ReadableStream({
+//       start(controller) {
+//         return pump();
+//         function pump() {
+//           return reader.read().then(({ done, value }) => {
+//             if (done) {
+//               controller.close();
+//               return;
+//             }
+//             controller.enqueue(value);
+//             return pump();
+//           });
+//         }
+//       },
+//     });
+//   })
+//   .then((stream) => new Response(stream))
+//   .then((response) => response.blob())
+//   .then((blob) => {
+//     let file = new File([blob], name, { type: contentType });
+//     filesToEncypt.push({
+//       name: name,
+//       file,
+//     });
+//     console.log(filesToEncypt);
+//   })
+//   .catch((err) => console.error(err));
