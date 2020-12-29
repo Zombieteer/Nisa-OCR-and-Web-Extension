@@ -24,66 +24,94 @@ const getAttachments = async (sdk) => {
   let filesToEncypt = [];
   let sender;
 
-  await sdk.Conversations.registerMessageViewHandler(async (messageView) => {
-    sender = messageView.getSender();
-    let items = messageView.getFileAttachmentCardViews();
+  let unRegister = await sdk.Conversations.registerMessageViewHandler(
+    async (messageView) => {
+      sender = messageView.getSender();
+      let items = messageView.getFileAttachmentCardViews();
 
-    //retrieve attachments to encrypt
-    if (messageView.isLoaded() && items.length) {
-      
-      // open getting attachment modal
-      let attachment_read_modal = sdk.Widgets.showModalView({
-        title: "Please Wait...",
-        el: "<div>Attachments are being read</div>",
-      });
-      document.querySelector(".inboxsdk__modal_content").style.marginTop = 0;
-
-      for (let item of items) {
-        try {
-          let attachment = item._attachmentCardImplementation._element;
-          let download_url = attachment.attributes.getNamedItem("download_url")
-            .textContent;
-          let re = /([^:]+):([^:]+):(.+)/;
-          let match = re.exec(download_url);
-
-          const contentType = match[1];
-          const name = decodeURI(match[2]);
-          const contentLink = match[3];
-
-          let response = await fetch(contentLink);
-          let blob = await response.blob();
-          let file = new File([blob], name, { type: contentType });
-
-          // const url = URL.createObjectURL(file);
-          // let link = document.createElement("a");
-          // link.href = url;
-          // link.setAttribute("download", "file.pdf");
-          // link.click();
-
-          filesToEncypt.push({
-            name: name,
-            file,
+      //retrieve attachments to encrypt
+      if (messageView.getViewState() === "EXPANDED") {
+        if (messageView.isLoaded() && items.length) {
+          // open getting attachment modal
+          let attachment_read_modal = sdk.Widgets.showModalView({
+            title: "Please Wait...",
+            el: "<div>Attachments are being read</div>",
           });
-          console.log(filesToEncypt);
+          document.querySelector(
+            ".inboxsdk__modal_content"
+          ).style.marginTop = 0;
 
-          console.log(match);
-        } catch (error) {
-          console.log(error);
+          for (let item of items) {
+            try {
+              let attachment = item._attachmentCardImplementation._element;
+              let download_url = attachment.attributes.getNamedItem(
+                "download_url"
+              ).textContent;
+              let re = /([^:]+):([^:]+):(.+)/;
+              let match = re.exec(download_url);
+
+              const contentType = match[1];
+              const name = decodeURI(match[2]);
+              const contentLink = match[3];
+
+              let response = await fetch(contentLink);
+              let blob = await response.blob();
+              let file = new File([blob], name, { type: contentType });
+
+              // const url = URL.createObjectURL(file);
+              // let link = document.createElement("a");
+              // link.href = url;
+              // link.setAttribute("download", "file.pdf");
+              // link.click();
+
+              filesToEncypt.push({
+                name: name,
+                file,
+              });
+              console.log(filesToEncypt);
+
+              console.log(match);
+            } catch (error) {
+              console.log(error);
+            }
+          }
+
+          console.log("attachment retrieved", filesToEncypt);
+
+          // close getting attachment modal
+          attachment_read_modal.close();
+
+          // encrypt file
+
+          // send mail
+          let attachments = [];
+          sendMail(sdk, attachments);
+        } else {
+          // open no attachment found modal
+          let no_attachment_found = sdk.Widgets.showModalView({
+            title: "Recheck the message file",
+            el: "<div>No Attachments were found within opened message</div>",
+            buttons: [
+              {
+                text: "Ok",
+                type: "PRIMARY_ACTION",
+                showCloseButton: true,
+                onClick: () => no_attachment_found.close(),
+              },
+            ],
+          });
+          document.querySelector(
+            ".inboxsdk__modal_content"
+          ).style.marginTop = 0;
+          document.querySelector(
+            ".inboxsdk__modal_buttons"
+          ).style.paddingTop = 0;
         }
       }
-
-      console.log("attachment retrieved", filesToEncypt);
-
-      // close getting attachment modal
-      attachment_read_modal.close();
-
-      // encrypt file
-
-      // send mail
-      let attachments = [];
-      sendMail(sdk, attachments);
     }
-  });
+  );
+
+  unRegister();
 };
 
 const sendMail = async (sdk, attachments) => {
