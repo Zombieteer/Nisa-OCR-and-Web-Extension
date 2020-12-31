@@ -54,20 +54,22 @@ const getAttachments = async (sdk) => {
               const name = decodeURI(match[2]);
               const contentLink = match[3];
 
-              let response = await fetch(contentLink);
-              let blob = await response.blob();
-              let file = new File([blob], name, { type: contentType });
+              if (contentType === "application/pdf") {
+                let response = await fetch(contentLink);
+                let blob = await response.blob();
+                let file = new File([blob], name, { type: contentType });
 
-              // const url = URL.createObjectURL(file);
-              // let link = document.createElement("a");
-              // link.href = url;
-              // link.setAttribute("download", "file.pdf");
-              // link.click();
+                // let url = URL.createObjectURL(file);
+                // let link = document.createElement("a");
+                // link.href = url;
+                // link.setAttribute("download", "file.pdf");
+                // link.click();
 
-              filesToEncypt.push({
-                name: name,
-                file,
-              });
+                filesToEncypt.push({
+                  name: name,
+                  file,
+                });
+              }
               console.log(filesToEncypt);
 
               console.log(match);
@@ -82,10 +84,29 @@ const getAttachments = async (sdk) => {
           attachment_read_modal.close();
 
           // encrypt file
-
-          // send mail
-          let attachments = [];
-          sendMail(sdk, attachments);
+          if (filesToEncypt.length) {
+            encryptFile(sdk, sender, filesToEncypt);
+          } else {
+            let no_attachment_found = sdk.Widgets.showModalView({
+              title: "Recheck the message file",
+              el:
+                "<div>No pdf Attachments were found within opened message</div>",
+              buttons: [
+                {
+                  text: "Ok",
+                  type: "PRIMARY_ACTION",
+                  showCloseButton: true,
+                  onClick: () => no_attachment_found.close(),
+                },
+              ],
+            });
+            document.querySelector(
+              ".inboxsdk__modal_content"
+            ).style.marginTop = 0;
+            document.querySelector(
+              ".inboxsdk__modal_buttons"
+            ).style.paddingTop = 0;
+          }
         } else {
           // open no attachment found modal
           let no_attachment_found = sdk.Widgets.showModalView({
@@ -113,6 +134,57 @@ const getAttachments = async (sdk) => {
 
   unRegister();
 };
+
+const encryptFile = async (sdk, sender, filesToEncypt) => {
+  // open encrypting modal
+  let encrypt_file_modal = sdk.Widgets.showModalView({
+    title: "Please Wait...",
+    el: "<div>Files are being Protected</div>",
+  });
+  document.querySelector(".inboxsdk__modal_content").style.marginTop = 0;
+
+  let filesToRevert = [];
+
+  try {
+    for (let encyptedFile of filesToEncypt) {
+      console.log(encyptedFile);
+      let data = new FormData();
+      data.append("file", encyptedFile.file);
+      data.append("email", sender);
+
+      let res = await fetch(`http://localhost:3001/api/send`, {
+        method: "POST",
+        body: data,
+      });
+      console.log(res);
+      let fileToRevert = new File([new Blob([res.data])], encyptedFile.name, {
+        type: "application/pdf",
+      });
+      filesToRevert.push({
+        name: encyptedFile.name,
+        data: await toBase64(fileToRevert),
+      });
+    }
+
+    console.log(filesToRevert);
+    encrypt_file_modal.close();
+
+    // send mail
+    let attachments = [...filesToRevert];
+    // let attachments = [];
+    sendMail(sdk, attachments);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
+const toBase64 = (fileToRevert) =>
+  new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.readAsDataURL(fileToRevert);
+    reader.onload = () => resolve(reader.result);
+    reader.onerror = (error) => reject(error);
+  });
 
 const sendMail = async (sdk, attachments) => {
   // open sending mail modal
