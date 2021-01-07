@@ -21,11 +21,11 @@ const btnClickHandler = async (event, sdk) => {
 };
 
 const getAttachments = async (sdk) => {
-  let filesToEncypt = [];
-  let sender;
-
+  
   let unRegister = await sdk.Conversations.registerMessageViewHandler(
     async (messageView) => {
+      let filesToEncypt = [];
+      let sender;
       sender = messageView.getSender();
       let items = messageView.getFileAttachmentCardViews();
 
@@ -57,7 +57,7 @@ const getAttachments = async (sdk) => {
               if (contentType === "application/pdf") {
                 let response = await fetch(contentLink);
                 let blob = await response.blob();
-                let file = new File([blob], name, { type: contentType });
+                let file = new File([blob], name);
 
                 // let url = URL.createObjectURL(file);
                 // let link = document.createElement("a");
@@ -87,6 +87,7 @@ const getAttachments = async (sdk) => {
           if (filesToEncypt.length) {
             encryptFile(sdk, sender, filesToEncypt);
           } else {
+            // open no attachment found modal
             let no_attachment_found = sdk.Widgets.showModalView({
               title: "Recheck the message file",
               el:
@@ -156,8 +157,10 @@ const encryptFile = async (sdk, sender, filesToEncypt) => {
         method: "POST",
         body: data,
       });
+      res = await res.blob();
+
       console.log(res);
-      let fileToRevert = new File([new Blob([res.data])], encyptedFile.name, {
+      let fileToRevert = new File([new Blob([res])], encyptedFile.name, {
         type: "application/pdf",
       });
       filesToRevert.push({
