@@ -21,7 +21,6 @@ const btnClickHandler = async (event, sdk) => {
 };
 
 const getAttachments = async (sdk) => {
-  
   let unRegister = await sdk.Conversations.registerMessageViewHandler(
     async (messageView) => {
       let filesToEncypt = [];
@@ -70,10 +69,9 @@ const getAttachments = async (sdk) => {
                   file,
                 });
               }
-              console.log(filesToEncypt);
-
               console.log(match);
             } catch (error) {
+              errorModal(sdk, error);
               console.log(error);
             }
           }
@@ -177,6 +175,8 @@ const encryptFile = async (sdk, sender, filesToEncypt) => {
     // let attachments = [];
     sendMail(sdk, attachments);
   } catch (error) {
+    encrypt_file_modal.close();
+    errorModal(sdk, error);
     console.log(error);
   }
 };
@@ -241,4 +241,21 @@ const sendMail = async (sdk, attachments) => {
       );
     }
   });
+};
+
+const errorModal = (sdk, error) => {
+  let error_Modal = sdk.Widgets.showModalView({
+    title: "Error... ",
+    el: `<div>${error}</div>
+          <div>Please try again later</div>`,
+    buttons: [
+      {
+        text: "Ok",
+        type: "PRIMARY_ACTION",
+        showCloseButton: true,
+        onClick: () => error_Modal.close(),
+      },
+    ],
+  });
+  document.querySelector(".inboxsdk__modal_content").style.margin = 0;
 };
