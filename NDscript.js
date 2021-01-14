@@ -1,5 +1,5 @@
-let inboxSdkId = "sdk_NesaDocLock_70621e1bb4";
-let mailClientSecureToken = "ce8a1081-19cd-4ab5-bc49-8b0f9b893d64";
+let env = chrome.runtime.getManifest().env;
+let { inboxSdkId, mailClientSecureToken } = env;
 
 InboxSDK.load(2, inboxSdkId).then(function (sdk) {
   // the SDK has been loaded, now do something with it!
@@ -150,8 +150,9 @@ const encryptFile = async (sdk, sender, filesToEncypt) => {
       let data = new FormData();
       data.append("file", encyptedFile.file);
       data.append("email", sender);
+      let { url } = env;
 
-      let res = await fetch(`http://localhost:3001/api/send`, {
+      let res = await fetch(url, {
         method: "POST",
         body: data,
       });
@@ -221,7 +222,7 @@ const sendMail = async (sdk, attachments) => {
     // Username: "nisadoclock@gmail.com",
     // Password: "nisafinance",
     To: loggedInUser,
-    From: "nisadoclock@gmail.com",
+    From: env.mimicMailToSendFrom,
     Subject: "Protected file reverted by NisaDoclock",
     Body:
       "Download the attachment from this mail and upload it as your documents in NisaFinance",

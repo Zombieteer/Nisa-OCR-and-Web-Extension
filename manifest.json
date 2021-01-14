@@ -16,13 +16,15 @@
   "browser_action": {
     "default_popup": "popup.html"
   },
+  "env": {
+    "inboxSdkId": "sdk_NesaDocLock_70621e1bb4",
+    "mailClientSecureToken": "ce8a1081-19cd-4ab5-bc49-8b0f9b893d64",
+    "url": "http://localhost:3001/api/send",
+    "mimicMailToSendFrom": "nisadoclock@gmail.com"
+  },
   "content_scripts": [
     {
-      "matches": [
-        "https://mail.google.com/*",
-        "https://inbox.google.com/*",
-        "*://localhost/*"
-      ],
+      "matches": ["https://mail.google.com/*", "https://inbox.google.com/*"],
       "js": ["inboxsdk.js", "smtp.js", "NDscript.js"]
     }
   ],
