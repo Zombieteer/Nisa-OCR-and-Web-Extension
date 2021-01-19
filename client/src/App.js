@@ -19,7 +19,7 @@ firebase.initializeApp(firebaseConfig);
 
 export const AuthContext = React.createContext(null);
 
-const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || ``;
+const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || `http://localhost:3001`;
 
 function App() {
   const [isOpen, setIsOpen] = useState(false);
@@ -298,31 +298,32 @@ const Encrypt = () => {
   );
 };
 
-const SenderSuggestionItem = ({ setSender, setSuggestions, children }) => {
-  return (
-    <div
-      className="flex items-center px-2 py-1 mx-2 text-gray-700 rounded cursor-pointer hover:bg-gray-300"
-      onClick={(e) => {
-        setSender(e.target.innerText);
-        setSuggestions(null);
-      }}
-    >
-      <svg
-        fill="currentColor"
-        viewBox="0 0 20 20"
-        className="flex-shrink-0 w-6 h-6 mr-4"
-      >
-        <path
-          fill-rule="evenodd"
-          d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
-          clip-rule="evenodd"
-        ></path>
-      </svg>
-      <span></span>
-      {children}
-    </div>
-  );
-};
+// const SenderSuggestionItem = ({ setSender, setSuggestions, children }) => {
+//   return (
+//     <div
+//       className="flex items-center px-2 py-1 mx-2 text-gray-700 rounded cursor-pointer hover:bg-gray-300"
+//       onClick={(e) => {
+//         setSender(e.target.innerText);
+//         setSuggestions(null);
+//       }}
+//     >
+//       <svg
+//         fill="currentColor"
+//         viewBox="0 0 20 20"
+//         className="flex-shrink-0 w-6 h-6 mr-4"
+//       >
+//         <path
+//           fill-rule="evenodd"
+//           d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-6-3a2 2 0 11-4 0 2 2 0 014 0zm-2 4a5 5 0 00-4.546 2.916A5.986 5.986 0 0010 16a5.986 5.986 0 004.546-2.084A5 5 0 0010 11z"
+//           clip-rule="evenodd"
+//         ></path>
+//       </svg>
+//       <span></span>
+//       {children}
+//     </div>
+//   );
+// };
+
 const Verify = () => {
   const [encryptedHash, setEncryptedHash] = useState(null);
   const [fetchingUsers, setFetchingUsers] = useState(true);
@@ -350,10 +351,10 @@ const Verify = () => {
       alert('Please select a file and the person you received the file from')
       return
     }
-    if(!users.includes(sender)) {
-      alert('Please select a sender from the suggestions')
-      return
-    }
+    // if(!users.includes(sender)) {
+    //   alert('Please select a sender from the suggestions')
+    //   return
+    // }
     if(loading) {
       alert('Request already in progress')
       return
@@ -389,10 +390,10 @@ const Verify = () => {
       .catch((e) => alert("Error in fetching Users please refresh the page"));
   }, []);
 
-  useEffect(() => {
-    if (sender && users)
-      setSuggestions(users.filter((user) => user.includes(sender)));
-  }, [users, sender]);
+  // useEffect(() => {
+  //   if (sender && users)
+  //     setSuggestions(users.filter((user) => user.includes(sender)));
+  // }, [users, sender]);
 
   return (
     <div className="p-4">
@@ -428,17 +429,18 @@ const Verify = () => {
                 className="w-full form-input"
                 placeholder="Enter an email address"
                 value={
-                  fetchingUsers
-                    ? `Please wait as the data is loaded...`
-                    : sender
+                  // fetchingUsers
+                  //   ? `Please wait as the data is loaded...`
+                  //   : 
+                    sender
                 }
                 onChange={(e) => setSender(e.target.value)}
               />
               <div
                 className={`absolute top-0 right-0 flex items-center justify-between h-full mx-2 text-gray-500   cursor-pointer ${
-                  suggestions ? "block" : "hidden"
+                  sender ? "block" : "hidden"
                 }`}
-                onClick={(e) => setSuggestions(null)}
+                onClick={(e) => setSender("")}
               >
                 <svg
                   fill="none"
@@ -452,7 +454,7 @@ const Verify = () => {
                   <path d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                 </svg>
               </div>
-              {suggestions && (
+              {/* {suggestions && (
                 <div className="absolute left-0 w-64 py-2 space-y-1 bg-white border rounded shadow-xl bottom-full">
                   {suggestions &&
                     suggestions.map((item) => (
@@ -464,7 +466,7 @@ const Verify = () => {
                       </SenderSuggestionItem>
                     ))}
                 </div>
-              )}
+              )} */}
             </div>
 
             <button

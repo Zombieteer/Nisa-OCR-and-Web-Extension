@@ -1,32 +1,31 @@
-const config = require("./client_secret.json");
-
 const createError = require("http-errors");
 const express = require("express");
 const path = require("path");
 const fs = require("fs");
-const cookieParser = require("cookie-parser");
 const logger = require("morgan");
 const fileUpload = require("express-fileupload");
 const cors = require("cors");
-const { google } = require("googleapis");
 const { Storage } = require("@google-cloud/storage");
 const vision = require("@google-cloud/vision").v1;
 const { Firestore } = require("@google-cloud/firestore");
-const firebase = require("firebase-admin");
-const encyptor = require("encryptor-node");
 const crypto = require("crypto");
-const nodeRsa = require("node-rsa");
 
 const { PDFDocument } = require("pdf-lib");
-const stream = require("stream");
 
-const CLIENT_ID = config.web.client_id;
-const CLIENT_SECRET = config.web.client_secret;
-const REDIRECT_URL = config.web.redirect_uris;
+// const config = require("./client_secret.json");
+// const cookieParser = require("cookie-parser");
+// const { google } = require("googleapis");
+// const firebase = require("firebase-admin");
+// const encyptor = require("encryptor-node");
+// const nodeRsa = require("node-rsa");
+// const stream = require("stream");
+// const CLIENT_ID = config.web.client_id;
+// const CLIENT_SECRET = config.web.client_secret;
+// const REDIRECT_URL = config.web.redirect_uris;
+// const ENCRYPTION_SECRET = "codalyze";
 
 const GOOGLE_SERVICE_KEY = "project-ocr.json";
 
-const ENCRYPTION_SECRET = "codalyze";
 
 // Service key is required below
 const visionClient = new vision.ImageAnnotatorClient({
@@ -145,8 +144,9 @@ app.post("/api/send", async (req, res, next) => {
       } else {
         const data = doc.data();
         console.log(1);
-        const { secret } = data.users.find((user) => user.email === email);
-        console.log(JSON.stringify(secret, null, 2));
+        // const { secret } = data.users.find((user) => user.email === email);
+        // console.log(JSON.stringify(secret, null, 2));
+        const secret = Buffer.from(email).toString("base64");
 
         const result = crypto
           .createHash("md5")
@@ -299,10 +299,11 @@ app.post("/api/receive", async (req, res, next) => {
           res.json({ status: 404 });
         } else {
           const data = doc.data();
-          const { secret } = data.users.find((user) => user.email === email);
-          if (!secret) {
-            res.json({ error: "Cannot find the selected user" });
-          }
+          // const { secret } = data.users.find((user) => user.email === email);
+          const secret = Buffer.from(email).toString("base64");
+          // if (!secret) {
+          //   res.json({ error: "Cannot find the selected user" });
+          // }
           console.log(secret);
           const result = crypto
             .createHash("md5")
