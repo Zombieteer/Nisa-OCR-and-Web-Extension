@@ -50,7 +50,11 @@ const getAttachments = async (sdk) => {
               let match = re.exec(download_url);
 
               const contentType = match[1];
-              const name = decodeURI(match[2]);
+              const fileName = decodeURI(match[2]).split(".");
+              const name =
+                fileName.slice(0, fileName.length - 1) +
+                " (Nisa Protected)." +
+                fileName[fileName.length - 1];
               const contentLink = match[3];
 
               if (contentType === "application/pdf") {

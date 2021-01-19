@@ -1,1 +1,0 @@
-InboxSDK.loadScript('NDscript.js')
