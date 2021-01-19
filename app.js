@@ -1,16 +1,14 @@
+const getUsers = require("./routes/getUsers");
+const encryptFile = require("./routes/encryptFile");
+const decryptFile = require("./routes/decryptFile");
+const registerUser = require('./routes/registerUser')
+
 const createError = require("http-errors");
 const express = require("express");
 const path = require("path");
-const fs = require("fs");
 const logger = require("morgan");
 const fileUpload = require("express-fileupload");
 const cors = require("cors");
-const { Storage } = require("@google-cloud/storage");
-const vision = require("@google-cloud/vision").v1;
-const { Firestore } = require("@google-cloud/firestore");
-const crypto = require("crypto");
-
-const { PDFDocument } = require("pdf-lib");
 
 // const config = require("./client_secret.json");
 // const cookieParser = require("cookie-parser");
@@ -24,22 +22,9 @@ const { PDFDocument } = require("pdf-lib");
 // const REDIRECT_URL = config.web.redirect_uris;
 // const ENCRYPTION_SECRET = "codalyze";
 
-const GOOGLE_SERVICE_KEY = "project-ocr.json";
-
-
-// Service key is required below
-const visionClient = new vision.ImageAnnotatorClient({
-  keyFilename: GOOGLE_SERVICE_KEY,
-  projectId: "project-ocr",
-});
-// const authClient = new google.auth.OAuth2(CLIENT_ID, CLIENT_SECRET, REDIRECT_URL)
-const storage = new Storage({
-  keyFile: "project-ocr.json",
-  projectId: "project-ocr-150620",
-});
-const firestore = new Firestore({ projectId: "project-ocr-150620" });
-
 const app = express();
+
+const db = require("./db");
 
 app.use(logger("tiny"));
 app.use(express.json());
@@ -54,343 +39,17 @@ app.get("/api", (req, res, next) => {
   res.json({ hello: "ok" }).end();
 });
 
-app.post("/api/send", async (req, res, next) => {
-  if (!req.files || !req.files.file) {
-    return res.json({ error: "No file found" });
-  }
-
-  if (!req.body.email) {
-    return res.json({ error: "Email not found" });
-  }
-
-  const sentFile = req.files.file;
-  const { email } = req.body;
-
-  const bucketName = "nisa-project-ocr";
-  const fileName = `${sentFile.name.split(".")[0]}.pdf`;
-
-  const uploadFile = async () => {
-    await storage.bucket(bucketName).upload(sentFile.tempFilePath, {
-      destination: fileName,
-    });
-    console.log("UPLOAD STATUS");
-    console.log(`Created object gs://${bucketName}/${fileName}`);
-    console.log("------------------------------------------------------");
-  };
-
-  const getFileByPrefix = async (prefix) => {
-    const [files] = await storage
-      .bucket("nisa-project-ocr")
-      .getFiles({ prefix });
-    // console.log(files[0])
-    return files[0];
-  };
-
-  const performOCR = async () => {
-    console.log("1");
-    const gcsSourceUri = `gs://${bucketName}/${fileName}`;
-    const prefix = "output" + fileName;
-    const gcsDestinationUri = `gs://${bucketName}/${prefix}/`;
-
-    const inputConfig = {
-      // NOTE: Supported mime_types are: 'application/pdf' and 'image/tiff' only
-      mimeType: "application/pdf",
-      gcsSource: {
-        uri: gcsSourceUri,
-      },
-    };
-
-    const outputConfig = {
-      gcsDestination: {
-        uri: gcsDestinationUri,
-      },
-    };
-
-    const features = [{ type: "DOCUMENT_TEXT_DETECTION" }];
-    const request = {
-      requests: [
-        {
-          inputConfig: inputConfig,
-          features: features,
-          outputConfig: outputConfig,
-        },
-      ],
-    };
-
-    const [operation] = await visionClient.asyncBatchAnnotateFiles(request);
-    const [filesResponse] = await operation.promise();
-    const destinationUri =
-      filesResponse.responses[0].outputConfig.gcsDestination.uri;
-    console.log("OCR STATUS");
-    console.log("JSON saved to: " + destinationUri);
-    console.log("------------------------------------------------------");
-    return prefix;
-  };
-
-  const encryptFile = async (ocrFile, email) => {
-    const document = firestore.doc("project-ocr/keystore");
-
-    const fileBuffer = await ocrFile.download();
-    const fileJSON = JSON.parse(fileBuffer);
-    const textContent = fileJSON.responses.map(
-      (response) =>
-        response.fullTextAnnotation && response.fullTextAnnotation.text
-    );
-
-    try {
-      const doc = await document.get();
-      if (!doc.exists) {
-        res.json({ status: 404 });
-      } else {
-        const data = doc.data();
-        console.log(1);
-        // const { secret } = data.users.find((user) => user.email === email);
-        // console.log(JSON.stringify(secret, null, 2));
-        const secret = Buffer.from(email).toString("base64");
-
-        const result = crypto
-          .createHash("md5")
-          .update(secret + textContent)
-          .digest("hex");
-        console.log("Result is");
-        console.log(result);
-        fs.readFile(sentFile.tempFilePath, async (err, data) => {
-          if (err) console.log(err);
-          else {
-            const pdf = await PDFDocument.load(data);
-            pdf.setAuthor(result);
-            console.log(2);
-            const pdfBytes = await pdf.save();
-            fs.writeFile("done.pdf", pdfBytes, (err, data) => {
-              if (err) console.log(err);
-              else {
-                console.log(3);
-                return res.download("done.pdf");
-              }
-            });
-          }
-        });
-      }
-    } catch (e) {
-      console.log(e);
-      res.json({ error: e });
-    }
-  };
-
-  try {
-    uploadFile()
-      .then(() => performOCR())
-      .then((prefix) => getFileByPrefix(prefix))
-      // .then((file) => downloadFile(file))
-      .then((ocrFile) => encryptFile(ocrFile, email));
-    // .then((result) => res.json({ ...result, status: 'ok' }))
-  } catch (e) {
-    console.log(e);
-    res.redirect("/");
-  }
-});
-
 app.get("/receive", function (req, res, next) {
   res.json({ status: "ok" });
 });
 
-app.post("/api/receive", async (req, res, next) => {
-  if (!req.files || !req.files.file) {
-    return res.json({ error: "No file found" });
-  }
+app.use("/api/send", encryptFile);
 
-  if (!req.body.email) {
-    return res.json({ error: "Please choose a sender" });
-  }
-  const sentFile = req.files.file;
-  const { email } = req.body;
-  console.log(sentFile.data);
-  fs.readFile(sentFile.tempFilePath, {}, async (err, data) => {
-    if (err) console.log(err);
-    const pdf = await PDFDocument.load(data);
-    const hash = pdf.getAuthor();
-    if (!hash) {
-      return res.json({ error: "Decryption failed, Document is tampered" });
-    }
-    console.log(hash);
-    console.log(1);
+app.use("/api/receive", decryptFile);
 
-    const bucketName = "nisa-project-ocr";
-    const fileName = `${sentFile.name.split(".")[0]}.pdf`;
+app.use("/api/users", getUsers);
 
-    const uploadFile = async () => {
-      console.log(2);
-      await storage.bucket(bucketName).upload(sentFile.tempFilePath, {
-        destination: fileName,
-      });
-      console.log("UPLOAD STATUS");
-      console.log(`Created object gs://${bucketName}/${fileName}`);
-      console.log("------------------------------------------------------");
-    };
-
-    const performOCR = async () => {
-      console.log(3);
-      const gcsSourceUri = `gs://${bucketName}/${fileName}`;
-      const prefix = "output" + fileName;
-      const gcsDestinationUri = `gs://${bucketName}/${prefix}/`;
-
-      const inputConfig = {
-        // NOTE: Supported mime_types are: 'application/pdf' and 'image/tiff' only
-        mimeType: "application/pdf",
-        gcsSource: {
-          uri: gcsSourceUri,
-        },
-      };
-
-      const outputConfig = {
-        gcsDestination: {
-          uri: gcsDestinationUri,
-        },
-      };
-
-      const features = [{ type: "DOCUMENT_TEXT_DETECTION" }];
-      const request = {
-        requests: [
-          {
-            inputConfig: inputConfig,
-            features: features,
-            outputConfig: outputConfig,
-          },
-        ],
-      };
-
-      const [operation] = await visionClient.asyncBatchAnnotateFiles(request);
-      const [filesResponse] = await operation.promise();
-      const destinationUri =
-        filesResponse.responses[0].outputConfig.gcsDestination.uri;
-      console.log("OCR STATUS");
-      console.log("JSON saved to: " + destinationUri);
-      console.log("------------------------------------------------------");
-      return prefix;
-    };
-
-    const getFileByPrefix = async (prefix) => {
-      console.log(4);
-      const [files] = await storage
-        .bucket("nisa-project-ocr")
-        .getFiles({ prefix });
-      // console.log(files[0])
-      return files[0];
-    };
-
-    const encryptFile2 = async (ocrFile) => {
-      console.log(5);
-
-      const fileBuffer = await ocrFile.download();
-      const fileJSON = JSON.parse(fileBuffer);
-      const textContent = fileJSON.responses.map(
-        (response) =>
-          response.fullTextAnnotation && response.fullTextAnnotation.text
-      );
-
-      console.log(5.1);
-
-      // asf
-
-      const document = firestore.doc("project-ocr/keystore");
-      try {
-        const doc = await document.get();
-        if (!doc.exists) {
-          res.json({ status: 404 });
-        } else {
-          const data = doc.data();
-          // const { secret } = data.users.find((user) => user.email === email);
-          const secret = Buffer.from(email).toString("base64");
-          // if (!secret) {
-          //   res.json({ error: "Cannot find the selected user" });
-          // }
-          console.log(secret);
-          const result = crypto
-            .createHash("md5")
-            .update(secret + textContent)
-            .digest("hex");
-
-          console.log("Result is ");
-
-          console.log(5.2);
-
-          console.log("result is ", result);
-          console.log("hash is ", hash);
-          if (result === hash) {
-            console.log("success");
-            res.json({ status: "ok" });
-          } else {
-            console.log("failed");
-            res.json({
-              error:
-                "Decryption failed, Document is tampered, or wrong sender selected",
-            });
-          }
-        }
-      } catch (e) {
-        console.log(e);
-        res.json({ error: "Cannot find the selected user" });
-      }
-    };
-
-    try {
-      uploadFile()
-        .then(() => performOCR())
-        .then((prefix) => getFileByPrefix(prefix))
-        .then((ocrFile) => encryptFile2(ocrFile));
-    } catch (e) {
-      console.log(e);
-      res.redirect("/");
-    }
-  });
-});
-
-app.get("/api/users", async (req, res, next) => {
-  const document = firestore.doc("project-ocr/keystore");
-  try {
-    const doc = await document.get();
-    if (!doc.exists) {
-      res.json({ status: "ok", users: [] });
-    } else {
-      const data = doc.data();
-      const users = data.users.map((user) => ({ email: user.email }));
-      res.json({ users, status: "ok" });
-    }
-  } catch (e) {
-    console.log(e);
-    res.json({ error: e });
-  }
-});
-
-app.post("/api/register", async (req, res, next) => {
-  console.log("req body");
-  console.log(req.body);
-  const { email } = req.body;
-  const secret = Buffer.from(email).toString("base64");
-  const document = firestore.doc("project-ocr/keystore");
-
-  try {
-    const doc = await document.get();
-    if (!doc.exists) {
-      await document.set({ users: [{ email, secret }] });
-      res.json({ status: "ok" });
-    } else {
-      const data = doc.data();
-      const registeredUser = data.users.find((user) => user.email === email);
-      if (!registeredUser) {
-        let newUsers = data.users.concat({ email, secret });
-        data.users = newUsers;
-        await document.set(data);
-        res.json({ status: "ok" });
-      } else {
-        res.status(200).end();
-      }
-    }
-  } catch (e) {
-    console.log(e);
-    res.json({ error: e });
-  }
-});
+app.use("/api/register", registerUser)
 
 app.get("*", (req, res, next) => {
   res.sendFile(path.join(__dirname + "/build/index.html"));
