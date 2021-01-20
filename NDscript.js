@@ -25,7 +25,7 @@ const getAttachments = async (sdk) => {
     async (messageView) => {
       let filesToEncypt = [];
       let sender;
-      sender = messageView.getSender();
+      sender = messageView.getSender().emailAddress;
       let items = messageView.getFileAttachmentCardViews();
 
       //retrieve attachments to encrypt
