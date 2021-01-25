@@ -14,6 +14,7 @@ import axios from "axios";
 import "./Loader.css";
 
 import HeroSvg from "./HeroSvg";
+import AdminPanel from "./admin/AdminPanel.js";
 
 firebase.initializeApp(firebaseConfig);
 
@@ -176,6 +177,10 @@ function App() {
 
               <Route path="/login" exact>
                 <Login />
+              </Route>
+
+              <Route path="/admin-panel" exact>
+                <AdminPanel />
               </Route>
 
               <Route path="/register" exact>

@@ -1,0 +1,9 @@
+.ag-theme-alpine .ag-cell,
+.ag-theme-alpine .ag-header-cell,
+.ag-theme-alpine .ag-header-group-cell {
+  border: 1px solid transparent;
+  line-height: 40px;
+  padding-left: 11px !important;
+  padding-right: 11px !important;
+  -webkit-font-smoothing: subpixel-antialiased;
+}

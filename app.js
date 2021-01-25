@@ -1,7 +1,7 @@
 const getUsers = require("./routes/getUsers");
 const encryptFile = require("./routes/encryptFile");
 const decryptFile = require("./routes/decryptFile");
-const registerUser = require('./routes/registerUser')
+const registerUser = require("./routes/registerUser");
 
 const createError = require("http-errors");
 const express = require("express");
@@ -35,6 +35,15 @@ app.use(fileUpload({ useTempFiles: true, tempFileDir: "/tmp/" }));
 
 // Routes
 
+app.get("/api/sql", (req, res, next) => {
+  db.any('SELECT * FROM public."user"')
+    .then((rows) => {
+      console.log(rows);
+      res.json(rows);
+    })
+    .catch((err) => console.log(err));
+});
+
 app.get("/api", (req, res, next) => {
   res.json({ hello: "ok" }).end();
 });
@@ -49,7 +58,7 @@ app.use("/api/receive", decryptFile);
 
 app.use("/api/users", getUsers);
 
-app.use("/api/register", registerUser)
+app.use("/api/register", registerUser);
 
 app.get("*", (req, res, next) => {
   res.sendFile(path.join(__dirname + "/build/index.html"));
