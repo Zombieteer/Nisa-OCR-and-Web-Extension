@@ -14,13 +14,14 @@ import axios from "axios";
 import "./Loader.css";
 
 import HeroSvg from "./HeroSvg";
-import AdminPanel from "./admin/AdminPanel.js";
+import AdminPanel from "./admin";
 
 firebase.initializeApp(firebaseConfig);
 
 export const AuthContext = React.createContext(null);
 
-const API_ENDPOINT = process.env.REACT_APP_API_ENDPOINT || `http://localhost:3001`;
+const API_ENDPOINT =
+  process.env.REACT_APP_API_ENDPOINT || `http://localhost:3001`;
 
 function App() {
   const [isOpen, setIsOpen] = useState(false);
@@ -166,6 +167,10 @@ function App() {
                 <Home />
               </Route>
 
+              <Route path="/admin-panel">
+                <AdminPanel />
+              </Route>
+
               <ProtectedRoute exact path="/encrypt" component={Encrypt} />
 
               <Route path="/encrypt" exact>
@@ -177,10 +182,6 @@ function App() {
 
               <Route path="/login" exact>
                 <Login />
-              </Route>
-
-              <Route path="/admin-panel" exact>
-                <AdminPanel />
               </Route>
 
               <Route path="/register" exact>
@@ -280,7 +281,7 @@ const Encrypt = () => {
               className="flex items-center justify-center px-4 py-2 text-white bg-gray-800 rounded shadow "
               disabled={loading}
             >
-              {loading ? 'Please wait...' : 'Encrypt file'}
+              {loading ? "Please wait..." : "Encrypt file"}
             </button>
           </div>
         </form>
@@ -346,23 +347,23 @@ const Verify = () => {
   };
 
   const _onClickHandler = async (event) => {
-    console.log('sender is ')
-    console.log(sender)
+    console.log("sender is ");
+    console.log(sender);
 
-    console.log('users is ')
-    console.log(users)
+    console.log("users is ");
+    console.log(users);
     event.preventDefault();
-    if(!file || !sender ){
-      alert('Please select a file and the person you received the file from')
-      return
+    if (!file || !sender) {
+      alert("Please select a file and the person you received the file from");
+      return;
     }
     // if(!users.includes(sender)) {
     //   alert('Please select a sender from the suggestions')
     //   return
     // }
-    if(loading) {
-      alert('Request already in progress')
-      return
+    if (loading) {
+      alert("Request already in progress");
+      return;
     }
     setLoading(true);
     setVerify(false);
@@ -389,7 +390,7 @@ const Verify = () => {
     axios
       .get(`${API_ENDPOINT}/api/users`)
       .then((res) => {
-        setUsers(res.data.users.map(item  => item.email));
+        setUsers(res.data.users.map((item) => item.email));
         setFetchingUsers(false);
       })
       .catch((e) => alert("Error in fetching Users please refresh the page"));
@@ -436,8 +437,8 @@ const Verify = () => {
                 value={
                   // fetchingUsers
                   //   ? `Please wait as the data is loaded...`
-                  //   : 
-                    sender
+                  //   :
+                  sender
                 }
                 onChange={(e) => setSender(e.target.value)}
               />

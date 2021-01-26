@@ -127,8 +127,8 @@ router.post("/", async (req, res, next) => {
         } else {
           const data = doc.data();
           // const { secret } = data.users.find((user) => user.email === email);
-        console.log("decrypt email", email);
-        const secret = Buffer.from(email).toString("base64");
+          console.log("decrypt email", email);
+          const secret = Buffer.from(email).toString("base64");
           // if (!secret) {
           //   res.json({ error: "Cannot find the selected user" });
           // }

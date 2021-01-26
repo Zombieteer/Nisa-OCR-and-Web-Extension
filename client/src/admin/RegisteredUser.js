@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import AddModal from "./AddModal";
 import UserEditRenderer from "./UserEditRenderer";
 
-function AdminPanel() {
+function RegisteredUser() {
   const [gridApi, setGridApi] = useState(null);
   const [gridColumnApi, setGridColumnApi] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -140,8 +140,8 @@ function AdminPanel() {
   };
 
   return (
-    <div>
-      <div className="flex justify-between  mt-5 mb-5 ">
+    <div className="flex-auto">
+      <div className="flex justify-between  mt-5 mb-5 pl-8 pr-8">
         <h2 className="text-2xl">Registered Users</h2>
         <button
           type="submit"
@@ -180,4 +180,4 @@ function AdminPanel() {
   );
 }
 
-export default AdminPanel;
+export default RegisteredUser;
