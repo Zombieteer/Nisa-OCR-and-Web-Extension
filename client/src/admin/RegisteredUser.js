@@ -1,9 +1,10 @@
 import { AgGridReact } from "ag-grid-react/lib/agGridReact";
-import React, { useState } from "react";
+import axios from "axios";
+import React, { useEffect, useState } from "react";
 import AddModal from "./AddModal";
 import UserEditRenderer from "./UserEditRenderer";
 
-function RegisteredUser() {
+function RegisteredUser({ API_ENDPOINT }) {
   const [gridApi, setGridApi] = useState(null);
   const [gridColumnApi, setGridColumnApi] = useState(null);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -24,18 +25,35 @@ function RegisteredUser() {
     {
       name: "Shobhit codalyze",
       email: "shobhit@codalyze.com",
-      role_type: "Admin",
-      files_count: 0,
-      isSubscribed: true,
+      role: "Admin",
+      total_files: 0,
+      is_subscribed: true,
     },
     {
       name: "Shobhit Nigam",
       email: "aryan.nigam1996@gmail.com",
-      role_type: "Non-Admin",
-      files_count: 0,
-      isSubscribed: false,
+      role: "Non-Admin",
+      total_files: 0,
+      is_subscribed: false,
     },
   ]);
+
+  useEffect(() => {
+    axios
+      .get(`${API_ENDPOINT}/api/users`)
+      .then((res) => {
+        console.log(res);
+        setRowData(
+          res.data.users.map((user) => {
+            user.is_subscribed
+              ? (user.is_subscribed = true)
+              : (user.is_subscribed = false);
+            return user;
+          })
+        );
+      })
+      .catch((e) => alert("Error in fetching Users please refresh the page"));
+  }, []);
 
   // columndefs
   const columnDefs = [
@@ -55,19 +73,19 @@ function RegisteredUser() {
     },
     {
       headerName: "Role Type",
-      field: "role_type",
+      field: "role",
       sortable: true,
       editable: false,
     },
     {
       headerName: "Number of Files Encrypted",
-      field: "files_count",
+      field: "total_files",
       sortable: true,
       editable: false,
     },
     {
       headerName: "Subscribed",
-      field: "isSubscribed",
+      field: "is_subscribed",
       pinned: "right",
       sortable: false,
       filter: false,

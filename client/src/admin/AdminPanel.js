@@ -3,7 +3,7 @@ import { Link, Route, Switch, useRouteMatch } from "react-router-dom";
 import RegisteredUser from "./RegisteredUser";
 import Settings from "./Settings";
 
-const AdminPanel = () => {
+const AdminPanel = ({ API_ENDPOINT }) => {
   let { path, url } = useRouteMatch();
   return (
     <Fragment>
@@ -25,7 +25,7 @@ const AdminPanel = () => {
         </aside>
         <Switch>
           <Route exact path={path}>
-            <RegisteredUser />
+            <RegisteredUser API_ENDPOINT={API_ENDPOINT} />
           </Route>
           <Route path={`${path}/settings`}>
             <Settings />

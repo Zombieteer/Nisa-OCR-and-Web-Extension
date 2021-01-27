@@ -4,9 +4,9 @@ const AddModal = ({ saveClient, rowInWork, isAddModalOpen, closeAddModal }) => {
   const [userDetails, setUserDetails] = useState({
     name: "",
     email: "",
-    role_type: "Admin",
-    files_count: 0,
-    isSubscribed: false,
+    role: "user",
+    total_files: 0,
+    is_subscribed: false,
   });
 
   useEffect(() => {
@@ -15,15 +15,15 @@ const AddModal = ({ saveClient, rowInWork, isAddModalOpen, closeAddModal }) => {
       : setUserDetails({
           name: "",
           email: "",
-          role_type: "Admin",
-          files_count: 0,
-          isSubscribed: false,
+          role: "user",
+          total_files: 0,
+          is_subscribed: false,
         });
   }, [rowInWork]);
 
   const roleTypes = [
-    { label: "Admin", value: "Admin" },
-    { label: "Non-admin", value: "Non-admin" },
+    { label: "Admin", value: "admin" },
+    { label: "Non-Admin", value: "user" },
   ];
   const subsTypes = [
     { label: "Yes", value: true },
@@ -96,8 +96,8 @@ const AddModal = ({ saveClient, rowInWork, isAddModalOpen, closeAddModal }) => {
                         </div>
                         <div className="mb-3 pt-0">
                           <Dropdown
-                            name="role_type"
-                            value={userDetails.role_type}
+                            name="role"
+                            value={userDetails.role}
                             label="Role Type"
                             options={roleTypes}
                           />
@@ -118,8 +118,8 @@ const AddModal = ({ saveClient, rowInWork, isAddModalOpen, closeAddModal }) => {
                         </div>
                         <div className="mb-3 pt-0">
                           <Dropdown
-                            name="isSubscribed"
-                            value={userDetails.isSubscribed}
+                            name="is_subscribed"
+                            value={userDetails.is_subscribed}
                             label="Subscribed"
                             options={subsTypes}
                           />

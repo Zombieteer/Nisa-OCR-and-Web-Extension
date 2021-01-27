@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 
-const { Firestore } = require("@google-cloud/firestore");
-const firestore = new Firestore({ projectId: "project-ocr-150620" });
+// const { Firestore } = require("@google-cloud/firestore");
+// const firestore = new Firestore({ projectId: "project-ocr-150620" });
 
 const { Storage } = require("@google-cloud/storage");
 const storage = new Storage({
@@ -119,46 +119,76 @@ router.post("/", async (req, res, next) => {
 
       // asf
 
-      const document = firestore.doc("project-ocr/keystore");
       try {
-        const doc = await document.get();
-        if (!doc.exists) {
-          res.json({ status: 404 });
+        console.log("decrypt email", email);
+        const secret = Buffer.from(email).toString("base64");
+        console.log(secret);
+        const result = crypto
+          .createHash("md5")
+          .update(secret + textContent)
+          .digest("hex");
+
+        console.log("Result is ");
+
+        console.log(5.2);
+
+        console.log("result is ", result);
+        console.log("hash is ", hash);
+        if (result === hash) {
+          console.log("success");
+          res.json({ status: "ok" });
         } else {
-          const data = doc.data();
-          // const { secret } = data.users.find((user) => user.email === email);
-          console.log("decrypt email", email);
-          const secret = Buffer.from(email).toString("base64");
-          // if (!secret) {
-          //   res.json({ error: "Cannot find the selected user" });
-          // }
-          console.log(secret);
-          const result = crypto
-            .createHash("md5")
-            .update(secret + textContent)
-            .digest("hex");
-
-          console.log("Result is ");
-
-          console.log(5.2);
-
-          console.log("result is ", result);
-          console.log("hash is ", hash);
-          if (result === hash) {
-            console.log("success");
-            res.json({ status: "ok" });
-          } else {
-            console.log("failed");
-            res.json({
-              error:
-                "Decryption failed, Document is tampered, or wrong sender selected",
-            });
-          }
+          console.log("failed");
+          res.json({
+            error:
+              "Decryption failed, Document is tampered, or wrong sender selected",
+          });
         }
       } catch (e) {
         console.log(e);
-        res.json({ error: "Cannot find the selected user" });
+        res.json({ error: e });
       }
+
+      // const document = firestore.doc("project-ocr/keystore");
+      // try {
+      //   const doc = await document.get();
+      //   if (!doc.exists) {
+      //     res.json({ status: 404 });
+      //   } else {
+      //     const data = doc.data();
+      //     // const { secret } = data.users.find((user) => user.email === email);
+      //     console.log("decrypt email", email);
+      //     const secret = Buffer.from(email).toString("base64");
+      //     // if (!secret) {
+      //     //   res.json({ error: "Cannot find the selected user" });
+      //     // }
+      //     console.log(secret);
+      //     const result = crypto
+      //       .createHash("md5")
+      //       .update(secret + textContent)
+      //       .digest("hex");
+
+      //     console.log("Result is ");
+
+      //     console.log(5.2);
+
+      //     console.log("result is ", result);
+      //     console.log("hash is ", hash);
+      //     if (result === hash) {
+      //       console.log("success");
+      //       res.json({ status: "ok" });
+      //     } else {
+      //       console.log("failed");
+      //       res.json({
+      //         error:
+      //           "Decryption failed, Document is tampered, or wrong sender selected",
+      //       });
+      //     }
+      //   }
+      // } catch (e) {
+      //   console.log(e);
+      //   res.json({ error: "Cannot find the selected user" });
+      // }
     };
 
     try {

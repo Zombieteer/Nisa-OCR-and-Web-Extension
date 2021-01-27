@@ -2,6 +2,7 @@ const getUsers = require("./routes/getUsers");
 const encryptFile = require("./routes/encryptFile");
 const decryptFile = require("./routes/decryptFile");
 const registerUser = require("./routes/registerUser");
+const { connect, insert, executeQuery, update } = require("./db");
 
 const createError = require("http-errors");
 const express = require("express");
@@ -24,24 +25,29 @@ const cors = require("cors");
 
 const app = express();
 
-const db = require("./db");
-
 app.use(logger("tiny"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "build")));
 app.use(cors());
 app.use(fileUpload({ useTempFiles: true, tempFileDir: "/tmp/" }));
+connect(app);
 
 // Routes
 
-app.get("/api/sql", (req, res, next) => {
-  db.any('SELECT * FROM public."user"')
-    .then((rows) => {
-      console.log(rows);
-      res.json(rows);
-    })
-    .catch((err) => console.log(err));
+
+//remove beofre commit
+app.get("/api/sql", async (req, res) => {
+  try {
+    let result = (await executeQuery("SELECT * FROM users")).rows;
+    result = result.map((obj) => {
+      return obj;
+    });
+    res.json(result);
+  } catch (e) {
+    console.log(e);
+    res.send({ status: "unsuccess", error: "Something went wrong" });
+  }
 });
 
 app.get("/api", (req, res, next) => {
@@ -52,13 +58,13 @@ app.get("/receive", function (req, res, next) {
   res.json({ status: "ok" });
 });
 
-app.use("/api/send", encryptFile);
+app.use("/api/send", encryptFile); // done
 
-app.use("/api/receive", decryptFile);
+app.use("/api/receive", decryptFile); //done
 
-app.use("/api/users", getUsers);
+app.use("/api/users", getUsers); //done
 
-app.use("/api/register", registerUser);
+app.use("/api/register", registerUser); //done
 
 app.get("*", (req, res, next) => {
   res.sendFile(path.join(__dirname + "/build/index.html"));

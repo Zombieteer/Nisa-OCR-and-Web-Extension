@@ -1,8 +1,9 @@
 import React from "react";
 import ReactDOM from "react-dom";
+import App from "./App";
 import "./index.css";
 import "./global.css";
-import App from "./App";
+import "./Loader.css";
 import "ag-grid-community/dist/styles/ag-grid.css";
 import "ag-grid-community/dist/styles/ag-theme-alpine.css";
 
