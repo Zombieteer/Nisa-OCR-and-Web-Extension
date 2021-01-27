@@ -10,9 +10,13 @@ router.get("/", async (req, res, next) => {
 
   try {
     let users = (await executeQuery("SELECT * FROM users")).rows;
-    users = users.map((obj) => {
-      return obj;
-    });
+    users.sort((a, b) =>
+      Date.parse(a.updated_on) > Date.parse(b.updated_on)
+        ? -1
+        : Date.parse(b.updated_on) > Date.parse(a.updated_on)
+        ? 1
+        : 0
+    );
     res.json({ users, status: "ok" });
   } catch (e) {
     console.log(e);

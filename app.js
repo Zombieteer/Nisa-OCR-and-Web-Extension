@@ -2,7 +2,8 @@ const getUsers = require("./routes/getUsers");
 const encryptFile = require("./routes/encryptFile");
 const decryptFile = require("./routes/decryptFile");
 const registerUser = require("./routes/registerUser");
-const { connect, insert, executeQuery, update } = require("./db");
+const updateUser = require("./routes/updateUser");
+const { connect, executeQuery } = require("./db");
 
 const createError = require("http-errors");
 const express = require("express");
@@ -35,7 +36,6 @@ connect(app);
 
 // Routes
 
-
 //remove beofre commit
 app.get("/api/sql", async (req, res) => {
   try {
@@ -58,13 +58,15 @@ app.get("/receive", function (req, res, next) {
   res.json({ status: "ok" });
 });
 
-app.use("/api/send", encryptFile); // done
+app.use("/api/send", encryptFile);
 
-app.use("/api/receive", decryptFile); //done
+app.use("/api/receive", decryptFile);
 
-app.use("/api/users", getUsers); //done
+app.use("/api/users", getUsers);
 
-app.use("/api/register", registerUser); //done
+app.use("/api/register", registerUser);
+
+app.use("/api/updateUser", updateUser);
 
 app.get("*", (req, res, next) => {
   res.sendFile(path.join(__dirname + "/build/index.html"));

@@ -1,4 +1,5 @@
 import { AgGridReact } from "ag-grid-react/lib/agGridReact";
+import Axios from "axios";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import AddModal from "./AddModal";
@@ -42,7 +43,6 @@ function RegisteredUser({ API_ENDPOINT }) {
     axios
       .get(`${API_ENDPOINT}/api/users`)
       .then((res) => {
-        console.log(res);
         setRowData(
           res.data.users.map((user) => {
             user.is_subscribed
@@ -130,31 +130,48 @@ function RegisteredUser({ API_ENDPOINT }) {
     setRowInWork(null);
   };
 
-  const saveClient = (userDetails) => {
+  const saveClient = async (userDetails) => {
     for (var i in userDetails) {
       if (userDetails[i] === "") {
         return;
       }
     }
     if (!rowInWork) {
-      let transactions = {
-        add: [userDetails],
-        addIndex: 0,
-      };
-      gridApi.applyTransaction(transactions);
-    } else {
-      gridApi.forEachNodeAfterFilterAndSort((rowNode, index) => {
-        if (rowNode.rowIndex === rowInWork.node.rowIndex) {
-          let data = rowNode;
-          data.data = userDetails;
-          gridApi.applyTransaction({
-            update: [data],
-          });
-          return;
-        }
+      let res = await axios.post(`${API_ENDPOINT}/api/register`, {
+        ...userDetails,
+        is_subscribed: userDetails.is_subscribed === "true" ? 1 : 0,
       });
+      if (res.data.msg === "User added") {
+        let transactions = {
+          add: [userDetails],
+          addIndex: 0,
+        };
+        gridApi.applyTransaction(transactions);
+        closeAddModal();
+      } else {
+        alert("User email already exists");
+      }
+    } else {
+      let res = await axios.post(`${API_ENDPOINT}/api/updateUser`, {
+        ...userDetails,
+        is_subscribed: userDetails.is_subscribed === "true" ? 1 : 0,
+      });
+      if (res.data.status === "success") {
+        gridApi.forEachNodeAfterFilterAndSort((rowNode, index) => {
+          if (rowNode.rowIndex === rowInWork.node.rowIndex) {
+            let data = rowNode;
+            data.data = userDetails;
+            gridApi.applyTransaction({
+              update: [data],
+            });
+            return;
+          }
+        });
+        closeAddModal();
+      } else {
+        alert("something went wrong, try later");
+      }
     }
-    closeAddModal();
   };
 
   return (

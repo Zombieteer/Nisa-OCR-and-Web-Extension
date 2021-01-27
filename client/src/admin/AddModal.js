@@ -31,14 +31,12 @@ const AddModal = ({ saveClient, rowInWork, isAddModalOpen, closeAddModal }) => {
   ];
 
   const onChange = (e) => {
-    console.log(e.target.name);
     setUserDetails({ ...userDetails, [e.target.name]: e.target.value });
-    console.log(userDetails);
   };
 
   const Dropdown = ({ name, value, label, options }) => {
     return (
-      <label className="block mt-4">
+      <label className="block mt-4" key={name}>
         <span className="text-gray-700">{label}</span>
         <select
           name={name}
