@@ -33,6 +33,7 @@ router.post("/", async (req, res, next) => {
 
   const sentFile = req.files.file;
   const { email } = req.body;
+  const { mailSender } = req.body;
   console.log("sender", email);
 
   const bucketName = "nisa-project-ocr";
@@ -115,8 +116,8 @@ router.post("/", async (req, res, next) => {
         user.total_files + 1,
       ]);
       console.log(1);
-      console.log("encrypt email", email);
-      const secret = Buffer.from(email).toString("base64");
+      console.log("encrypt email", mailSender);
+      const secret = Buffer.from(mailSender).toString("base64");
 
       const result = crypto
         .createHash("md5")
@@ -186,25 +187,30 @@ router.post("/", async (req, res, next) => {
     // }
   };
 
-  if (
-    user &&
-    user.total_files < user.file_limit &&
-    sentFile.size < user.filesize_upper_limit
-  ) {
-    try {
-      uploadFile()
-        .then(() => performOCR())
-        .then((prefix) => getFileByPrefix(prefix))
-        // .then((file) => downloadFile(file))
-        .then((ocrFile) => encryptFile(ocrFile, email));
-      // .then((result) => res.json({ ...result, status: 'ok' }))
-    } catch (e) {
-      console.log(e);
-      res.redirect("/");
+  if (user && user.total_files < user.file_limit) {
+    let size_allowed = user.is_subscribed
+      ? sentFile.size / 1000 < user.filesize_upper_limit
+      : sentFile.size / 1000 < user.filesize_lower_limit;
+    console.log(size_allowed);
+    if (size_allowed) {
+      try {
+        uploadFile()
+          .then(() => performOCR())
+          .then((prefix) => getFileByPrefix(prefix))
+          // .then((file) => downloadFile(file))
+          .then((ocrFile) => encryptFile(ocrFile, email));
+        // .then((result) => res.json({ ...result, status: 'ok' }))
+      } catch (e) {
+        console.log(e);
+        res.redirect("/");
+      }
+    } else {
+      console.log("failed");
+      res.json({ status: "failed", msg: "encryption not allowed" });
     }
   } else {
-    console.log("failed");
-    res.json({ status: "failed", msg: "encryption not allowed" });
+    console.log("file limit exceeded");
+    res.json({ status: "failed", msg: "file limit exceeded" });
   }
 });
 

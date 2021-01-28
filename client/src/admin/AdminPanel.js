@@ -17,9 +17,9 @@ const AdminPanel = ({ API_ENDPOINT }) => {
               <li className="mb-4 text-gray-900 hover:text-gray-700 focus:text-gray-700">
                 <Link to={`${url}`}>Registered Users</Link>
               </li>
-              <li className="mb-4 text-gray-900 hover:text-gray-700 focus:text-gray-700">
+              {/* <li className="mb-4 text-gray-900 hover:text-gray-700 focus:text-gray-700">
                 <Link to={`${url}/settings`}>Settings</Link>
-              </li>
+              </li> */}
             </ul>
           </nav>
         </aside>
@@ -27,9 +27,9 @@ const AdminPanel = ({ API_ENDPOINT }) => {
           <Route exact path={path}>
             <RegisteredUser API_ENDPOINT={API_ENDPOINT} />
           </Route>
-          <Route path={`${path}/settings`}>
+          {/* <Route path={`${path}/settings`}>
             <Settings />
-          </Route>
+          </Route> */}
         </Switch>
       </div>
     </Fragment>

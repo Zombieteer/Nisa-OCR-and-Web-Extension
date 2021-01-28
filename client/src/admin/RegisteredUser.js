@@ -1,5 +1,4 @@
 import { AgGridReact } from "ag-grid-react/lib/agGridReact";
-import Axios from "axios";
 import axios from "axios";
 import React, { useEffect, useState } from "react";
 import AddModal from "./AddModal";

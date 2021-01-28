@@ -3,6 +3,7 @@ import axios from "axios";
 import { Link, useHistory } from "react-router-dom";
 
 const Register = ({ firebase, API_ENDPOINT, AuthContext }) => {
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
 
@@ -21,9 +22,15 @@ const Register = ({ firebase, API_ENDPOINT, AuthContext }) => {
             .createUserWithEmailAndPassword(email, password)
             .then((res) => {
               if (res) {
-                Auth.setIsLoggedIn(true);
-                axios.post(`${API_ENDPOINT}/api/register`, { email });
-                history.push("/");
+                axios
+                  .post(`${API_ENDPOINT}/api/register`, { email, name })
+                  .then((res) => {
+                    console.log(res);
+                    if (res.data.status === "success") {
+                      Auth.setIsLoggedIn(true);
+                      history.push("/");
+                    }
+                  });
               }
             })
             .catch((e) => {
@@ -46,15 +53,17 @@ const Register = ({ firebase, API_ENDPOINT, AuthContext }) => {
         const token = result.credential.accessToken;
         // The signed-in user info.
         const user = result.user;
-        axios.post(`${API_ENDPOINT}/api/register`, {
-          email: user.email,
-          name: user.displayName,
-        }).then((res) => {
-          if (res.data.status === "success") {
-            Auth.setIsLoggedIn(true);
-            history.push("/");
-          }
-        });;
+        axios
+          .post(`${API_ENDPOINT}/api/register`, {
+            email: user.email,
+            name: user.displayName,
+          })
+          .then((res) => {
+            if (res.data.status === "success") {
+              Auth.setIsLoggedIn(true);
+              history.push("/");
+            }
+          });
       })
       .catch((e) => console.log(e));
   };
@@ -64,6 +73,17 @@ const Register = ({ firebase, API_ENDPOINT, AuthContext }) => {
       <h1 className="px-4 mb-4 text-2xl">Register a new account</h1>
       <form onSubmit={register}>
         <div className="container flex flex-col p-4 md:max-w-xl">
+          <label className="block mb-4">
+            <span className="text-gray-700">Name</span>
+            <input
+              type="text"
+              className="block w-full mt-1 form-input"
+              placeholder="faraz"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+          </label>
+
           <label className="block mb-4">
             <span className="text-gray-700">Email</span>
             <input

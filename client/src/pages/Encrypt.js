@@ -1,10 +1,11 @@
 import axios from "axios";
 import React, { useState } from "react";
 
-const Encrypt = ({ API_ENDPOINT }) => {
+const Encrypt = ({ API_ENDPOINT, user }) => {
   const [toggleDetails, setToggleDetails] = useState(false);
   const [loading, setLoading] = useState(false);
   const [file, setFile] = useState(null);
+  const [mailSender, setMailSender] = useState("");
   const [encryptedHash, setEncryptedHash] = useState(null);
   const [publicKey, setPublicKey] = useState(null);
 
@@ -14,12 +15,19 @@ const Encrypt = ({ API_ENDPOINT }) => {
     const data = new FormData();
     data.append("file", file);
     data.append("email", JSON.parse(localStorage.getItem("authUser")).email);
+    data.append("mailSender", mailSender);
 
-    axios.post(`${API_ENDPOINT}/api/send`, data, {
-      // receive two parameter endpoint url ,form data
-      responseType: "blob",
-    })
+    axios
+      .post(`${API_ENDPOINT}/api/send`, data, {
+        // receive two parameter endpoint url ,form data
+        responseType: "blob",
+      })
       .then((res) => {
+        if (res.headers["content-type"].split(";")[0] === "application/json") {
+          setLoading(false);
+          alert("Encryption failed, either file limit or file size exceeded");
+          return;
+        }
         setLoading(false);
         console.log(res);
         const file = new Blob([res.data]);
@@ -27,7 +35,7 @@ const Encrypt = ({ API_ENDPOINT }) => {
         const link = document.createElement("a");
         link.href = url;
         console.log(res.headers);
-        link.setAttribute("download", "encrypted.pdf");
+        link.setAttribute("download", "Nisa Protected.pdf");
         document.body.appendChild(link);
         link.click();
       })
@@ -42,6 +50,9 @@ const Encrypt = ({ API_ENDPOINT }) => {
   return (
     <div className="p-4">
       <h1 className="px-4 mb-4 text-2xl">Encrypt a new file</h1>
+      <h1 className="px-4 mb-4 text-xl text-gray-700">
+        {user && user.file_limit - user.total_files + " files left to encrypt"}
+      </h1>
       <div className="grid grid-cols-2">
         <form>
           <div className="container flex flex-col p-4 md:max-w-xl">
@@ -64,6 +75,18 @@ const Encrypt = ({ API_ENDPOINT }) => {
                 accept=".pdf"
                 className="hidden"
                 onChange={_onChangeHandler}
+              />
+            </label>
+            <label className="block mb-4">
+              <span className="text-gray-700">
+                File recieved from email ID:
+              </span>
+              <input
+                type="email"
+                className="block w-full mt-1 form-input"
+                placeholder="faraz@codalyze.com"
+                value={mailSender}
+                onChange={(e) => setMailSender(e.target.value)}
               />
             </label>
 

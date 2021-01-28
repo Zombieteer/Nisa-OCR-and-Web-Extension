@@ -8,7 +8,7 @@ const UserEditRenderer = (props) => {
   return (
     <div onClick={editRow} style={{ cursor: "pointer" }}>
       <svg
-        style={{ margin: "auto", width: 18, height: "-webkit-fill-available" }}
+        style={{ margin: "auto", width: 18, height: 43 }}
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
       >

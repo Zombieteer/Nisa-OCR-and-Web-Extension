@@ -7,6 +7,7 @@ const { executeQuery } = require("../db");
 
 router.get("/", async (req, res, next) => {
   // const document = firestore.doc("project-ocr/keystore");
+  console.log(req.params);
 
   try {
     let users = (await executeQuery("SELECT * FROM users")).rows;
@@ -36,6 +37,20 @@ router.get("/", async (req, res, next) => {
   //   console.log(e);
   //   res.json({ error: e });
   // }
+});
+
+router.post("/", async (req, res, next) => {
+  let { email } = req.body;
+
+  try {
+    let user = (
+      await executeQuery("SELECT * FROM users WHERE email=$1", [email])
+    ).rows[0];
+    res.json({ user, status: "ok" });
+  } catch (e) {
+    console.log(e);
+    res.send({ status: "unsuccess", error: "Something went wrong" });
+  }
 });
 
 module.exports = router;

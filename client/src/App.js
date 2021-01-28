@@ -15,6 +15,7 @@ import Decrypt from "./pages/Decrypt.js";
 import Login from "./pages/Login.js";
 import Register from "./pages/Register.js";
 import Layout from "./components/Layout.js";
+import axios from "axios";
 
 firebase.initializeApp(firebaseConfig);
 
@@ -31,6 +32,7 @@ function App() {
   // );
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [user, setUser] = useState(null);
   console.log("Current user");
   console.log(firebase.auth().currentUser);
 
@@ -41,6 +43,16 @@ function App() {
         localStorage.setItem("authUser", JSON.stringify(authUser));
         localStorage.getItem("isAdmin") &&
           setIsAdmin(localStorage.getItem("isAdmin"));
+
+        let email = JSON.parse(localStorage.getItem("authUser")).email;
+        axios
+          .post(`${API_ENDPOINT}/api/users`, { email })
+          .then((res) => {
+            setUser(res.data.user);
+          })
+          .catch((e) =>
+            alert("Error in fetching Users please refresh the page")
+          );
       } else {
         setIsLoggedIn(false);
         localStorage.removeItem("authUser");
@@ -58,7 +70,14 @@ function App() {
   return (
     <div className="">
       <AuthContext.Provider
-        value={{ isLoggedIn, setIsLoggedIn, isAdmin, setIsAdmin }}
+        value={{
+          isLoggedIn,
+          setIsLoggedIn,
+          isAdmin,
+          setIsAdmin,
+          user,
+          API_ENDPOINT,
+        }}
       >
         <Router>
           <Layout
@@ -84,10 +103,16 @@ function App() {
                 <AdminPanel />
               </Route>
 
-              <ProtectedRoute exact path="/encrypt" component={Encrypt} />
+              <ProtectedRoute
+                exact
+                path="/encrypt"
+                API_ENDPOINT={API_ENDPOINT}
+                user={user}
+                component={Encrypt}
+              />
 
               <Route path="/encrypt" exact>
-                <Encrypt API_ENDPOINT={API_ENDPOINT} />
+                <Encrypt />
               </Route>
               <Route path="/verify" exact>
                 <Decrypt API_ENDPOINT={API_ENDPOINT} />
