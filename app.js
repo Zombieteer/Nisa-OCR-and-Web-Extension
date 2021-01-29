@@ -3,6 +3,7 @@ const encryptFile = require("./routes/encryptFile");
 const decryptFile = require("./routes/decryptFile");
 const registerUser = require("./routes/registerUser");
 const updateUser = require("./routes/updateUser");
+const subscriptionSettings = require("./routes/subscriptionSettings");
 const { connect, executeQuery } = require("./db");
 
 const createError = require("http-errors");
@@ -67,6 +68,8 @@ app.use("/api/users", getUsers);
 app.use("/api/register", registerUser);
 
 app.use("/api/updateUser", updateUser);
+
+app.use("/api/subscriptionSettings", subscriptionSettings);
 
 app.get("*", (req, res, next) => {
   res.sendFile(path.join(__dirname + "/build/index.html"));

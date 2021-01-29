@@ -106,6 +106,8 @@ const AddModal = ({ saveClient, rowInWork, isAddModalOpen, closeAddModal }) => {
                           <label className="block">
                             <span className="text-gray-700">Email</span>
                             <input
+                              disabled={rowInWork}
+                              style={rowInWork ? { background: "#e2e2e2" } : {}}
                               name="email"
                               value={userDetails.email}
                               onChange={onChange}

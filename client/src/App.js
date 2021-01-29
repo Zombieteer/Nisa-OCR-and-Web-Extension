@@ -95,7 +95,6 @@ function App() {
               </Route>
 
               <ProtectedRoute
-                exact
                 path="/admin-panel"
                 component={() => <AdminPanel API_ENDPOINT={API_ENDPOINT} />}
               />

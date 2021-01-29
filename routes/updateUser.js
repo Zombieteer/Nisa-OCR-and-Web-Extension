@@ -15,7 +15,7 @@ router.post("/", async (req, res, next) => {
           {
             ...user,
             is_subscribed: 1,
-            file_limit: 1000,
+            // file_limit: 1000,
             updated_on: moment().format("LLL"),
           },
           "users",
@@ -26,7 +26,7 @@ router.post("/", async (req, res, next) => {
           {
             ...user,
             is_subscribed: 0,
-            file_limit: 10,
+            // file_limit: 10,
             updated_on: moment().format("LLL"),
           },
           "users",
@@ -36,7 +36,7 @@ router.post("/", async (req, res, next) => {
       res.send({ status: "success", msg: `user updated` });
     }
   } catch (error) {
-    console.log(e);
+    console.log(error);
     res.send({ status: "unsuccess", error: "Something went wrong" });
   }
 });

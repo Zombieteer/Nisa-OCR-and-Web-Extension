@@ -39,8 +39,12 @@ router.post("/", async (req, res, next) => {
   const bucketName = "nisa-project-ocr";
   const fileName = `${sentFile.name.split(".")[0]}.pdf`;
 
-  let user = (await executeQuery(`SELECT * FROM users WHERE email=$1`, [email]))
-    .rows[0];
+  let user = (
+    await executeQuery(
+      `SELECT * FROM users JOIN files ON users.is_subscribed = files.is_subscribed WHERE email=$1`,
+      [email]
+    )
+  ).rows[0];
 
   const uploadFile = async () => {
     await storage.bucket(bucketName).upload(sentFile.tempFilePath, {
@@ -188,9 +192,10 @@ router.post("/", async (req, res, next) => {
   };
 
   if (user && user.total_files < user.file_limit) {
-    let size_allowed = user.is_subscribed
-      ? sentFile.size / 1000 < user.filesize_upper_limit
-      : sentFile.size / 1000 < user.filesize_lower_limit;
+    // let size_allowed = user.is_subscribed
+    //   ? sentFile.size / 1000 < user.filesize_upper_limit
+    //   : sentFile.size / 1000 < user.filesize_lower_limit;
+    let size_allowed = sentFile.size / 1000 < user.filesize_limit;
     console.log(size_allowed);
     if (size_allowed) {
       try {

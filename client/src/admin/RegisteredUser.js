@@ -21,26 +21,11 @@ function RegisteredUser({ API_ENDPOINT }) {
   };
 
   //row data
-  const [rowData, setRowData] = useState([
-    {
-      name: "Shobhit codalyze",
-      email: "shobhit@codalyze.com",
-      role: "Admin",
-      total_files: 0,
-      is_subscribed: true,
-    },
-    {
-      name: "Shobhit Nigam",
-      email: "aryan.nigam1996@gmail.com",
-      role: "Non-Admin",
-      total_files: 0,
-      is_subscribed: false,
-    },
-  ]);
+  const [rowData, setRowData] = useState();
 
   useEffect(() => {
     axios
-      .get(`${API_ENDPOINT}/api/users`)
+      .get(`${API_ENDPOINT}/api/users/core`)
       .then((res) => {
         setRowData(
           res.data.users.map((user) => {
@@ -151,6 +136,7 @@ function RegisteredUser({ API_ENDPOINT }) {
         alert("User email already exists");
       }
     } else {
+      console.log(userDetails)
       let res = await axios.post(`${API_ENDPOINT}/api/updateUser`, {
         ...userDetails,
         is_subscribed: userDetails.is_subscribed === "true" ? 1 : 0,

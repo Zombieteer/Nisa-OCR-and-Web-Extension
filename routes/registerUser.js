@@ -14,6 +14,11 @@ router.post("/", async (req, res, next) => {
   // const document = firestore.doc("project-ocr/keystore");
 
   try {
+    const re = /^(([^<>()[\]\\.,;:\s@"]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/;
+    if (!re.test(String(email).toLowerCase())) {
+      alert("Invalid email address");
+      return;
+    }
     let user = (
       await executeQuery(`SELECT * FROM users WHERE email=$1`, [email])
     ).rows[0];
