@@ -19,7 +19,9 @@
   "env": {
     "inboxSdkId": "sdk_NesaDocLock_70621e1bb4",
     "mailClientSecureToken": "ce8a1081-19cd-4ab5-bc49-8b0f9b893d64",
-    "url": "http://localhost:3001/api/send",
+    "nesaDoclockWeb": "https://app.nisadoclock.com",
+    "encryptUri": "http://localhost:3001/api/send",
+    "getUserUri": "http://localhost:3001/api/users",
     "mimicMailToSendFrom": "nisadoclock@gmail.com"
   },
   "content_scripts": [

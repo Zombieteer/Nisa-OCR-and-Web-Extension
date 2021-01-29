@@ -15,9 +15,48 @@ InboxSDK.load(2, inboxSdkId).then(function (sdk) {
 
 const btnClickHandler = async (event, sdk) => {
   if (event.position === "THREAD") {
+    // check if user exist in data base
+    let ifuserExist = await isUserExist(sdk);
+
     // get attachments
-    await getAttachments(sdk);
+    if (ifuserExist) await getAttachments(sdk);
+    else {
+      // open user not found modal
+      let user_not_found_modal = sdk.Widgets.showModalView({
+        title: "User Not Found",
+        el: `<div>You are not registered with Nisa Doclock</div>
+        <p>Get yourself registered from 
+        <a href=${env.nesaDoclockWeb}>here</a>
+        </p>`,
+        buttons: [
+          {
+            text: "Ok",
+            type: "PRIMARY_ACTION",
+            showCloseButton: true,
+            onClick: () => user_not_found_modal.close(),
+          },
+        ],
+      });
+      document.querySelector(".inboxsdk__modal_content").style.marginTop = 0;
+      document.querySelector(".inboxsdk__modal_content").style.marginBottom = 0;
+    }
   }
+};
+
+const isUserExist = async (sdk) => {
+  let { getUserUri } = env;
+  let loggedInUser = await sdk.User.getEmailAddress();
+  let res = await fetch(getUserUri, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ email: loggedInUser }),
+  });
+  res = await res.json();
+  if (res.user) {
+    return true;
+  } else return false;
 };
 
 const getAttachments = async (sdk) => {
@@ -27,7 +66,6 @@ const getAttachments = async (sdk) => {
       let sender;
       sender = messageView.getSender().emailAddress;
       let items = messageView.getFileAttachmentCardViews();
-
       //retrieve attachments to encrypt
       if (messageView.getViewState() === "EXPANDED") {
         if (messageView.isLoaded() && items.length) {
@@ -39,7 +77,6 @@ const getAttachments = async (sdk) => {
           document.querySelector(
             ".inboxsdk__modal_content"
           ).style.marginTop = 0;
-
           for (let item of items) {
             try {
               let attachment = item._attachmentCardImplementation._element;
@@ -48,7 +85,6 @@ const getAttachments = async (sdk) => {
               ).textContent;
               let re = /([^:]+):([^:]+):(.+)/;
               let match = re.exec(download_url);
-
               const contentType = match[1];
               const fileName = decodeURI(match[2]).split(".");
               const name =
@@ -56,18 +92,15 @@ const getAttachments = async (sdk) => {
                 " (Nisa Protected)." +
                 fileName[fileName.length - 1];
               const contentLink = match[3];
-
               if (contentType === "application/pdf") {
                 let response = await fetch(contentLink);
                 let blob = await response.blob();
                 let file = new File([blob], name);
-
                 // let url = URL.createObjectURL(file);
                 // let link = document.createElement("a");
                 // link.href = url;
                 // link.setAttribute("download", "file.pdf");
                 // link.click();
-
                 filesToEncypt.push({
                   name: name,
                   file,
@@ -79,12 +112,9 @@ const getAttachments = async (sdk) => {
               console.log(error);
             }
           }
-
           console.log("attachment retrieved", filesToEncypt);
-
           // close getting attachment modal
           attachment_read_modal.close();
-
           // encrypt file
           if (filesToEncypt.length) {
             encryptFile(sdk, sender, filesToEncypt);
@@ -134,7 +164,6 @@ const getAttachments = async (sdk) => {
       }
     }
   );
-
   unRegister();
 };
 
@@ -149,14 +178,16 @@ const encryptFile = async (sdk, sender, filesToEncypt) => {
   let filesToRevert = [];
 
   try {
+    let loggedInUser = await sdk.User.getEmailAddress();
     for (let encyptedFile of filesToEncypt) {
       console.log(encyptedFile);
       let data = new FormData();
       data.append("file", encyptedFile.file);
-      data.append("email", sender);
-      let { url } = env;
+      data.append("email", loggedInUser);
+      data.append("mailSender", sender);
+      let { encryptUri } = env;
 
-      let res = await fetch(url, {
+      let res = await fetch(encryptUri, {
         method: "POST",
         body: data,
       });
