@@ -26,7 +26,7 @@ const btnClickHandler = async (event, sdk) => {
         title: "User Not Found",
         el: `<div>You are not registered with Nisa Doclock</div>
         <p>Get yourself registered from 
-        <a href=${env.nesaDoclockWeb}>here</a>
+        <a href='${env.nesaDoclockWeb}/register'>here</a>
         </p>`,
         buttons: [
           {
