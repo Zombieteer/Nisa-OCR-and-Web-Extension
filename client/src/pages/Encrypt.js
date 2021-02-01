@@ -79,7 +79,7 @@ const Encrypt = ({ API_ENDPOINT, user }) => {
             </label>
             <label className="block mb-4">
               <span className="text-gray-700">
-                File recieved from email ID:
+                Email address from which file was recieved:
               </span>
               <input
                 type="email"

@@ -51,14 +51,16 @@ const Layout = ({
                   Home
                 </NavLink>
               </li>
-              <li className="pb-2 md:mx-3 md:py-6">
-                <NavLink
-                  className="text-gray-900 hover:text-gray-700 focus:text-gray-700"
-                  to="/encrypt"
-                >
-                  Encrypt
-                </NavLink>
-              </li>
+              {Auth.isAdmin && (
+                <li className="pb-2 md:mx-3 md:py-6">
+                  <NavLink
+                    className="text-gray-900 hover:text-gray-700 focus:text-gray-700"
+                    to="/encrypt"
+                  >
+                    Encrypt
+                  </NavLink>
+                </li>
+              )}
               <li className="pb-2 md:mx-3 md:py-6">
                 <NavLink
                   className="text-gray-900 hover:text-gray-700 focus:text-gray-700"
