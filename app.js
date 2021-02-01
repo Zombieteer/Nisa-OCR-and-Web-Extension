@@ -3,6 +3,7 @@ const encryptFile = require("./routes/encryptFile");
 const decryptFile = require("./routes/decryptFile");
 const registerUser = require("./routes/registerUser");
 const updateUser = require("./routes/updateUser");
+const deleteUsers = require("./routes/deleteUsers");
 const subscriptionSettings = require("./routes/subscriptionSettings");
 const { connect, executeQuery } = require("./db");
 
@@ -68,6 +69,8 @@ app.use("/api/users", getUsers);
 app.use("/api/register", registerUser);
 
 app.use("/api/updateUser", updateUser);
+
+app.use("/api/deleteUsers", deleteUsers);
 
 app.use("/api/subscriptionSettings", subscriptionSettings);
 

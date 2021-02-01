@@ -120,7 +120,7 @@ router.post("/", async (req, res, next) => {
         user.total_files + 1,
       ]);
       console.log(1);
-      console.log("encrypt email", mailSender);
+      console.log("encrypting email using", mailSender);
       const secret = Buffer.from(mailSender).toString("base64");
 
       const result = crypto

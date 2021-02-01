@@ -44,6 +44,8 @@ function RegisteredUser({ API_ENDPOINT }) {
     {
       headerName: "Name",
       field: "name",
+      checkboxSelection: true,
+      headerCheckboxSelection: true,
       sortable: true,
       editable: false,
       pinned: "left",
@@ -136,7 +138,7 @@ function RegisteredUser({ API_ENDPOINT }) {
         alert("User email already exists");
       }
     } else {
-      console.log(userDetails)
+      console.log(userDetails);
       let res = await axios.post(`${API_ENDPOINT}/api/updateUser`, {
         ...userDetails,
         is_subscribed: userDetails.is_subscribed === "true" ? 1 : 0,
@@ -159,17 +161,52 @@ function RegisteredUser({ API_ENDPOINT }) {
     }
   };
 
+  const deleteSelected = async () => {
+    console.log(gridApi.getSelectedNodes());
+    let selectedRows = gridApi.getSelectedNodes();
+    if (selectedRows.length) {
+      let toDelete = [];
+      let emails = [];
+      selectedRows.forEach((row, id) => {
+        if (row.data.role === "user") {
+          toDelete.push(row.data);
+          emails.push(row.data.email);
+        }
+      });
+      if (emails.length) {
+        let res = await axios.post(`${API_ENDPOINT}/api/deleteUsers`, emails);
+        if (res.data.status === "success") {
+          gridApi.applyTransaction({
+            remove: toDelete,
+          });
+        } else {
+          alert("Something went wrong, try again later");
+        }
+      } else {
+        alert('Admin user cannot be deleted')
+      }
+    }
+  };
+
   return (
     <div className="flex-auto">
       <div className="flex justify-between  mt-5 mb-5 pl-8 pr-8">
         <h2 className="text-2xl">Registered Users</h2>
-        <button
-          type="submit"
-          onClick={openAddModal}
-          className="flex items-center justify-center px-4 py-2 text-white bg-gray-800 rounded shadow"
-        >
-          Add User
-        </button>
+        <div className="flex ">
+          <button
+            type="submit"
+            onClick={openAddModal}
+            className="flex items-center justify-center px-4 py-2 text-white bg-gray-800 rounded shadow"
+          >
+            Add User
+          </button>
+          <button
+            onClick={deleteSelected}
+            className="flex items-center justify-center ml-3 px-4 py-2 text-white bg-gray-800 rounded shadow"
+          >
+            Delete Selected
+          </button>
+        </div>
       </div>
       <div
         className="ag-theme-alpine"
@@ -185,7 +222,7 @@ function RegisteredUser({ API_ENDPOINT }) {
           animateRows
           onGridReady={onGridReady}
           columnDefs={columnDefs}
-          suppressRowClickSelection
+          rowSelection="multiple"
           onFirstDataRendered={onFirstDataRendered}
           frameworkComponents={cellRenderers}
         />
