@@ -37,7 +37,7 @@ router.get("/", async (req, res, next) => {
         ? 1
         : 0
     );
-    res.json({ users, status: "ok" });
+    res.json({ users, status: "success" });
   } catch (e) {
     console.log(e);
     res.send({ status: "unsuccess", error: "Something went wrong" });

@@ -38,20 +38,6 @@ connect(app);
 
 // Routes
 
-//remove beofre commit
-app.get("/api/sql", async (req, res) => {
-  try {
-    let result = (await executeQuery("SELECT * FROM users")).rows;
-    result = result.map((obj) => {
-      return obj;
-    });
-    res.json(result);
-  } catch (e) {
-    console.log(e);
-    res.send({ status: "unsuccess", error: "Something went wrong" });
-  }
-});
-
 app.get("/api", (req, res, next) => {
   res.json({ hello: "ok" }).end();
 });
