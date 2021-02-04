@@ -1,0 +1,41 @@
+{
+  "name": "Nisa Doclock",
+  "description": "Encrypt and Verify your documents using cryptography techniques",
+  "version": "0.0.1",
+  "manifest_version": 2,
+  "icons": {
+    "16": "./logos/logo_16.png",
+    "32": "./logos/logo_32.png",
+    "48": "./logos/logo_48.png",
+    "128": "./logos/logo_128.png"
+  },
+  "background": {
+    "scripts": ["./background.js"]
+  },
+  "options_page": "./options.html",
+  "browser_action": {
+    "default_popup": "popup.html"
+  },
+  "env": {
+    "inboxSdkId": "sdk_NesaDocLock_70621e1bb4",
+    "mailClientSecureToken": "ce8a1081-19cd-4ab5-bc49-8b0f9b893d64",
+    "nesaDoclockWeb": "https://app.nisadoclock.com",
+    "encryptUri": "http://localhost:3001/api/send",
+    "getUserUri": "http://localhost:3001/api/users",
+    "mimicMailToSendFrom": "nisadoclock@gmail.com"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://mail.google.com/*", "https://inbox.google.com/*"],
+      "js": ["inboxsdk.js", "smtp.js", "NDscript.js"]
+    }
+  ],
+  "permissions": [
+    "tabs",
+    "https://www.google.com/*",
+    "storage",
+    "https://mail.google.com/",
+    "https://inbox.google.com/"
+  ],
+  "web_accessible_resources": ["*.png"]
+}
