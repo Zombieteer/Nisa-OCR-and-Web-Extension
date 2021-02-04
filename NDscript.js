@@ -17,10 +17,10 @@ const btnClickHandler = async (event, sdk) => {
   if (event.position === "THREAD") {
     // check if user exist in data base
     let ifuserExist = await isUserExist(sdk);
-
+    if (ifuserExist === null) return;
     // get attachments
-    if (ifuserExist) await getAttachments(sdk);
-    else {
+    else if (ifuserExist) await getAttachments(sdk);
+    else if (ifuserExist === false) {
       // open user not found modal
       let user_not_found_modal = sdk.Widgets.showModalView({
         title: "User Not Found",
@@ -46,17 +46,23 @@ const btnClickHandler = async (event, sdk) => {
 const isUserExist = async (sdk) => {
   let { getUserUri } = env;
   let loggedInUser = await sdk.User.getEmailAddress();
-  let res = await fetch(getUserUri, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ email: loggedInUser }),
-  });
-  res = await res.json();
-  if (res.user) {
-    return true;
-  } else return false;
+  try {
+    let res = await fetch(getUserUri, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ email: loggedInUser }),
+    });
+    res = await res.json();
+    if (res.user) {
+      return true;
+    } else return false;
+  } catch (error) {
+    console.log(error);
+    errorModal(sdk, "Server Error");
+    return null;
+  }
 };
 
 const getAttachments = async (sdk) => {
@@ -70,13 +76,13 @@ const getAttachments = async (sdk) => {
       if (messageView.getViewState() === "EXPANDED") {
         if (messageView.isLoaded() && items.length) {
           // open getting attachment modal
-          let attachment_read_modal = sdk.Widgets.showModalView({
-            title: "Please Wait...",
-            el: "<div>Attachments are being read</div>",
-          });
-          document.querySelector(
-            ".inboxsdk__modal_content"
-          ).style.marginTop = 0;
+          // let attachment_read_modal = sdk.Widgets.showModalView({
+          //   title: "Please Wait...",
+          //   el: "<div>Attachments are being read</div>",
+          // });
+          // document.querySelector(
+          //   ".inboxsdk__modal_content"
+          // ).style.marginTop = 0;
           for (let item of items) {
             try {
               let attachment = item._attachmentCardImplementation._element;
@@ -114,7 +120,7 @@ const getAttachments = async (sdk) => {
           }
           console.log("attachment retrieved", filesToEncypt);
           // close getting attachment modal
-          attachment_read_modal.close();
+          // attachment_read_modal.close();
           // encrypt file
           if (filesToEncypt.length) {
             encryptFile(sdk, sender, filesToEncypt);
@@ -169,11 +175,11 @@ const getAttachments = async (sdk) => {
 
 const encryptFile = async (sdk, sender, filesToEncypt) => {
   // open encrypting modal
-  let encrypt_file_modal = sdk.Widgets.showModalView({
-    title: "Please Wait...",
-    el: "<div>Files are being Protected</div>",
-  });
-  document.querySelector(".inboxsdk__modal_content").style.marginTop = 0;
+  // let encrypt_file_modal = sdk.Widgets.showModalView({
+  //   title: "Please Wait...",
+  //   el: "<div>Files are being Protected</div>",
+  // });
+  // document.querySelector(".inboxsdk__modal_content").style.marginTop = 0;
 
   let filesToRevert = [];
 
@@ -204,7 +210,8 @@ const encryptFile = async (sdk, sender, filesToEncypt) => {
     }
 
     console.log(filesToRevert);
-    encrypt_file_modal.close();
+    // close files are beign encrypted modal
+    // encrypt_file_modal.close();
 
     // send mail
     let attachments = [...filesToRevert];
@@ -227,11 +234,11 @@ const toBase64 = (fileToRevert) =>
 
 const sendMail = async (sdk, attachments) => {
   // open sending mail modal
-  let sending_mail_modal = sdk.Widgets.showModalView({
-    title: "Please Wait...",
-    el: "<div>Mail is being reverter with protected attachments</div>",
-  });
-  document.querySelector(".inboxsdk__modal_content").style.marginTop = 0;
+  // let sending_mail_modal = sdk.Widgets.showModalView({
+  //   title: "Please Wait...",
+  //   el: "<div>Mail is being reverter with protected attachments</div>",
+  // });
+  // document.querySelector(".inboxsdk__modal_content").style.marginTop = 0;
 
   const showResponseModal = (title, message) => {
     let mail_sent_modal = sdk.Widgets.showModalView({
@@ -264,7 +271,8 @@ const sendMail = async (sdk, attachments) => {
     Attachments: attachments,
   }).then((message) => {
     if (message === "OK") {
-      sending_mail_modal.close();
+      // close sending mail modal
+      // sending_mail_modal.close();
       showResponseModal(
         "Success",
         "Mail has been reverted, please check inbox"
@@ -283,7 +291,7 @@ const errorModal = (sdk, error) => {
   let error_Modal = sdk.Widgets.showModalView({
     title: "Error... ",
     el: `<div>${error}</div>
-          <div>Please try again later</div>`,
+          <div>Please try again later, or contact Nisa Finance</div>`,
     buttons: [
       {
         text: "Ok",
